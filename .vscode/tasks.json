@@ -1,0 +1,59 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Build debug.",
+			"command": "g++-10",
+			"args": [
+				"-O0",
+				"-g",
+				"-DDEBUG",
+				"-std=c++20",
+				"-Wall",
+				"-Wextra",
+				"-Wpedantic",
+				"bag_to_pcap.cpp",
+				"-o",
+				"bag_to_pcap_debug.bin"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Build release.",
+			"command": "g++-10",
+			"args": [
+				"-O2",
+				"-s",
+				"-DNDEBUG",
+				"-std=c++20",
+				"-Wall",
+				"-Wextra",
+				"-Wpedantic",
+				"bag_to_pcap.cpp",
+				"-o",
+				"bag_to_pcap.bin"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
