@@ -1,5 +1,9 @@
+#ifdef _MSC_VER
+#include "memory_mapped_file.h"
+#else
 #include "read_only_file.h"
 #include "read_only_file_mapping.h"
+#endif
 #include "scope_exit.h"
 #include "utils.h"
 
@@ -14,11 +18,20 @@
 #include <vector>
 
 
-bool bag_to_pcap(int const argc, char const* const* const argv);
-bool bag_to_pcap(char const* const& input_file_name, char const* const& output_file_name);
+#ifdef _MSC_VER
+typedef wchar_t native_char_t;
+#define main_function wmain
+#else
+typedef char native_char_t;
+#define main_function main
+#endif
 
 
-int main(int const argc, char const* const* const argv)
+bool bag_to_pcap(int const argc, native_char_t const* const* const argv);
+bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t const* const& output_file_name);
+
+
+int main_function(int const argc, native_char_t const* const* const argv)
 {
 	auto something_wrong = mk::make_scope_exit([](){ std::puts("Oh no! Something went wrong!"); });
 
@@ -31,7 +44,7 @@ int main(int const argc, char const* const* const argv)
 }
 
 
-bool bag_to_pcap(int const argc, char const* const* const argv)
+bool bag_to_pcap(int const argc, native_char_t const* const* const argv)
 {
 	CHECK_RET(argc == 3, false);
 	bool const bussiness = bag_to_pcap(argv[1], argv[2]);
@@ -39,7 +52,7 @@ bool bag_to_pcap(int const argc, char const* const* const argv)
 	return true;
 }
 
-bool bag_to_pcap(char const* const& input_file_name, char const* const& output_file_name)
+bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t const* const& output_file_name)
 {
 	static constexpr int const s_min_file_size = 1 * 1024 * 1024;
 	static constexpr char const s_bag_magic[] = "#ROSBAG V2.0";
@@ -181,21 +194,27 @@ bool bag_to_pcap(char const* const& input_file_name, char const* const& output_f
 		CHECK_RET(data_len <= s_max_data_len, false);
 		CHECK_RET(input_file_idx + data_len <= input_file_size, false);
 		record.m_data.m_begin = input_file_ptr + input_file_idx;
-		record.m_data.m_len = input_file_ptr + input_file_idx + data_len - record.m_data.m_begin;
+		record.m_data.m_len = static_cast<int>(input_file_ptr + input_file_idx + data_len - record.m_data.m_begin);
 		input_file_idx += data_len;
 
 		return true;
 	};
 
+	#ifdef _MSC_VER
+	memory_mapped_file const input_file{input_file_name};
+	CHECK_RET(input_file.begin() != nullptr, false);
+	unsigned char const* const input_file_ptr = reinterpret_cast<unsigned char const*>(input_file.begin());
+	std::uint64_t const input_file_size = input_file.size();
+	#else
 	mk::read_only_file_t const input_file{input_file_name};
 	CHECK_RET(input_file, false);
 	mk::read_only_file_mapping_t const input_file_mapping{input_file};
 	CHECK_RET(input_file_mapping, false);
-
 	unsigned char const* const input_file_ptr = static_cast<unsigned char const*>(input_file_mapping.get());
 	std::uint64_t const input_file_size = input_file_mapping.get_size();
-	std::uint64_t input_file_idx = 0;
+	#endif
 
+	std::uint64_t input_file_idx = 0;
 	CHECK_RET(input_file_size >= s_min_file_size, false);
 	CHECK_RET(std::memcmp(input_file_ptr + input_file_idx, s_bag_magic, s_bag_magic_len) == 0, false);
 	input_file_idx += s_bag_magic_len;

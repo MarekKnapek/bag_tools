@@ -1,0 +1,10 @@
+/.vs
+
+/Debug
+/Release
+/x64
+
+/bag_to_pcap/bag_to_pcap.vcxproj.user
+/bag_to_pcap/Debug
+/bag_to_pcap/Release
+/bag_to_pcap/x64
