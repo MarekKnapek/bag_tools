@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "Build debug.",
+			"label": "Build GCC debug.",
 			"command": "g++-10",
 			"args": [
 				"-O0",
@@ -30,8 +30,62 @@
 		},
 		{
 			"type": "shell",
-			"label": "Build release.",
+			"label": "Build GCC release.",
 			"command": "g++-10",
+			"args": [
+				"-O2",
+				"-s",
+				"-DNDEBUG",
+				"-std=c++20",
+				"-Wall",
+				"-Wextra",
+				"-Wpedantic",
+				"bag_to_pcap.cpp",
+				"-o",
+				"bag_to_pcap.bin"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Build clang debug.",
+			"command": "clang++-10",
+			"args": [
+				"-O0",
+				"-g",
+				"-DDEBUG",
+				"-std=c++20",
+				"-Wall",
+				"-Wextra",
+				"-Wpedantic",
+				"bag_to_pcap.cpp",
+				"-o",
+				"bag_to_pcap_debug.bin"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Build clang release.",
+			"command": "clang++-10",
 			"args": [
 				"-O2",
 				"-s",
