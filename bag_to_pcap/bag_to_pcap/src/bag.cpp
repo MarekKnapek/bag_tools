@@ -400,12 +400,13 @@ bool mk::bag::detail::parse_record(unsigned char const* const& data, std::uint64
 	std::uint32_t const data_len = read<std::uint32_t>(data, len, idx);
 	CHECK_RET(len - idx >= data_len, false);
 
-	std::visit(make_overload
+	bool const got_data_len = std::visit(make_overload
 	(
-		[&](header::index_data_t const& obj) -> void { CHECK_RET_V(data_len == obj.m_count * (sizeof(std::uint64_t) + sizeof(std::uint32_t))); },
-		[&](header::chunk_info_t const& obj) -> void { CHECK_RET_V(data_len == obj.m_count * (sizeof(std::uint32_t) + sizeof(std::uint32_t))); },
-		[&](...) -> void {}
+		[&](header::index_data_t const& obj) -> bool { CHECK_RET(data_len == obj.m_count * (sizeof(std::uint64_t) + sizeof(std::uint32_t)), false); return true; },
+		[&](header::chunk_info_t const& obj) -> bool { CHECK_RET(data_len == obj.m_count * (sizeof(std::uint32_t) + sizeof(std::uint32_t)), false); return true; },
+		[&](...) -> bool { return true; }
 	), record.m_header);
+	CHECK_RET(got_data_len, false);
 	record.m_data.m_begin = data + idx;
 	record.m_data.m_len = data_len;
 	idx += data_len;

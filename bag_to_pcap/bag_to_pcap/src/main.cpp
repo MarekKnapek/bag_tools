@@ -34,7 +34,7 @@ typedef char native_char_t;
 
 bool bag_to_pcap(int const argc, native_char_t const* const* const argv);
 bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t const* const& output_file_name);
-void print_records(mk::bag::records_t const& records);
+bool print_records(mk::bag::records_t const& records);
 
 
 int main_function(int const argc, native_char_t const* const* const argv)
@@ -77,7 +77,8 @@ bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t cons
 	mk::bag::records_t records;
 	CHECK_RET(mk::bag::parse(input_file_ptr, input_file_size, &records), false);
 
-	print_records(records);
+	bool const printed = print_records(records);
+	CHECK_RET(printed, false);
 
 	(void)output_file_name;
 
@@ -98,30 +99,34 @@ char const* get_record_type(mk::bag::record_t const& record)
 	), record.m_header);
 }
 
-char const* get_record_details(mk::bag::record_t const& record, std::array<char, 256>& buff)
+bool get_record_details(mk::bag::record_t const& record, std::array<char, 256>& buff)
 {
-	std::visit(mk::make_overload
+	bool const formatted = std::visit(mk::make_overload
 	(
-		[&](mk::bag::header::bag_t const& obj) -> void { int const formatted = std::snprintf(buff.data(), buff.size(), "index_pos = %" PRIu64 ", conn_count = %" PRIu32 ", chunk_count = %" PRIu32 "", obj.m_index_pos, obj.m_conn_count, obj.m_chunk_count); CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size())); },
-		[&](mk::bag::header::chunk_t const& obj) -> void { int const formatted = std::snprintf(buff.data(), buff.size(), "compression = %.*s, size = %" PRIu32 "", obj.m_compression.m_len, obj.m_compression.m_begin, obj.m_size); CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size())); },
-		[&](mk::bag::header::connection_t const& obj) -> void { int const formatted = std::snprintf(buff.data(), buff.size(), "conn = %" PRIu32 ", topic = %.*s", obj.m_conn, obj.m_topic.m_len, obj.m_topic.m_begin); CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size())); },
-		[&](mk::bag::header::message_data_t const& obj) -> void { int const formatted = std::snprintf(buff.data(), buff.size(), "conn = %" PRIu32 ", time = %" PRIu64 "", obj.m_conn, obj.m_time); CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size())); },
-		[&](mk::bag::header::index_data_t const& obj) -> void { int const formatted = std::snprintf(buff.data(), buff.size(), "ver = %" PRIu32 ", conn = %" PRIu32 ", count = %" PRIu32 "", obj.m_ver, obj.m_conn, obj.m_count); CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size())); },
-		[&](mk::bag::header::chunk_info_t const& obj) -> void { int const formatted = std::snprintf(buff.data(), buff.size(), "ver = %" PRIu32 ", chunk_pos = %" PRIu64 ", start_time = %" PRIu64 ", end_time = %" PRIu64 ", count = %" PRIu32 "", obj.m_ver, obj.m_chunk_pos, obj.m_start_time, obj.m_end_time, obj.m_count); CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size())); }
+		[&](mk::bag::header::bag_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "index_pos = %" PRIu64 ", conn_count = %" PRIu32 ", chunk_count = %" PRIu32 "", obj.m_index_pos, obj.m_conn_count, obj.m_chunk_count); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
+		[&](mk::bag::header::chunk_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "compression = %.*s, size = %" PRIu32 "", obj.m_compression.m_len, obj.m_compression.m_begin, obj.m_size); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
+		[&](mk::bag::header::connection_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "conn = %" PRIu32 ", topic = %.*s", obj.m_conn, obj.m_topic.m_len, obj.m_topic.m_begin); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
+		[&](mk::bag::header::message_data_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "conn = %" PRIu32 ", time = %" PRIu64 "", obj.m_conn, obj.m_time); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
+		[&](mk::bag::header::index_data_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "ver = %" PRIu32 ", conn = %" PRIu32 ", count = %" PRIu32 "", obj.m_ver, obj.m_conn, obj.m_count); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
+		[&](mk::bag::header::chunk_info_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "ver = %" PRIu32 ", chunk_pos = %" PRIu64 ", start_time = %" PRIu64 ", end_time = %" PRIu64 ", count = %" PRIu32 "", obj.m_ver, obj.m_chunk_pos, obj.m_start_time, obj.m_end_time, obj.m_count); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; }
 	), record.m_header);
-	return buff.data();
+	CHECK_RET(formatted, false);
+	return true;
 }
 
-void print_records(mk::bag::records_t const& records)
+bool print_records(mk::bag::records_t const& records)
 {
 	int i = 0;
 	for(mk::bag::record_t const& record : records)
 	{
 		std::array<char, 256> buff;
 		std::array<char, 256> buff_details;
-		int const formatted = std::snprintf(buff.data(), buff.size(), "Record #%d, type = %s, size = %d, %s.\n", i, get_record_type(record), record.m_data.m_len, get_record_details(record, buff_details));
-		CHECK_RET_V(formatted >= 0 && formatted < static_cast<int>(buff.size()));
+		bool const got_details = get_record_details(record, buff_details);
+		CHECK_RET(got_details, false);
+		int const formatted = std::snprintf(buff.data(), buff.size(), "Record #%d, type = %s, size = %d, %s.\n", i, get_record_type(record), record.m_data.m_len, buff_details.data());
+		CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false);
 		std::printf("%s", buff.data());
 		++i;
 	}
+	return true;
 }
