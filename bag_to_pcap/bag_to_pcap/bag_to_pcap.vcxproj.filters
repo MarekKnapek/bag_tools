@@ -18,6 +18,9 @@
     <ClCompile Include="src\smart_handle.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\bag.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\.editorconfig">
@@ -38,6 +41,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\smart_handle.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bag.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\overload.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
