@@ -62,7 +62,7 @@ bool mk::bag::detail::parse_field(unsigned char const* const& data, std::uint64_
 	assert(out_field);
 	field_t& field = *out_field;
 
-	CHECK_RET(len - idx >= sizeof(std::uint32_t), false);
+	CHECK_RET(header_len - header_idx >= sizeof(std::uint32_t), false);
 	std::uint32_t const field_len = read<std::uint32_t>(data, len, idx);
 	header_idx += sizeof(std::uint32_t);
 	CHECK_RET(field_len <= s_max_field_len, false);
