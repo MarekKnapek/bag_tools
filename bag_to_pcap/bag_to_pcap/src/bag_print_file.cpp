@@ -26,6 +26,18 @@ namespace mk
 
 bool mk::bag::print_file(native_char_t const* const& file_path)
 {
+	read_only_memory_mapped_file_native_t const file{file_path};
+	CHECK_RET(file, false);
+	CHECK_RET(is_bag_file(file.get_data(), file.get_size()), false);
+
+	bool const printed = print_records(adjust_data(file.get_data()), adjust_len(file.get_size()));
+	CHECK_RET(printed, false);
+
+	return true;
+}
+
+bool mk::bag::print_records(void const* const& data, std::uint64_t const& len)
+{
 	static constexpr auto const s_record_callback = [](void* const& ctx, callback_variant_e const& variant, void const* const& data) -> bool
 	{
 		int& record_idx = *static_cast<int*>(ctx);
@@ -38,11 +50,8 @@ bool mk::bag::print_file(native_char_t const* const& file_path)
 		return true;
 	};
 
-	read_only_memory_mapped_file_native_t const file{file_path};
-	CHECK_RET(file, false);
-
 	int record_idx = 0;
-	bool const parsed = parse_file(file.get_data(), file.get_size(), s_record_callback, &record_idx);
+	bool const parsed = parse_records(data, len, s_record_callback, &record_idx);
 	CHECK_RET(parsed, false);
 
 	return true;

@@ -17,6 +17,8 @@ namespace mk
 	{
 		namespace detail
 		{
+			static constexpr char const s_bag_magic[] = "#ROSBAG V2.0\x0A";
+			static constexpr int const s_bag_magic_len = static_cast<int>(std::size(s_bag_magic)) - 1;
 			enum class field_descr_e
 			{
 				u8,
@@ -473,27 +475,31 @@ bool mk::bag::detail::parse_record(unsigned char const* const& data, std::uint64
 }
 
 
-bool mk::bag::parse_file(void const* const& void_data, std::uint64_t const& len, callback_t const& callback, void* const& callback_ctx)
+bool mk::bag::is_bag_file(void const* const& void_data, std::uint64_t const& len)
 {
 	unsigned char const* const data = static_cast<unsigned char const*>(void_data);
-	std::uint64_t idx = 0;
-
-	static constexpr char const s_bag_magic[] = "#ROSBAG V2.0\x0A";
-	static constexpr int const s_bag_magic_len = static_cast<int>(std::size(s_bag_magic)) - 1;
-	CHECK_RET(len - idx >= s_bag_magic_len, false);
-	CHECK_RET(std::memcmp(data + idx, s_bag_magic, s_bag_magic_len) == 0, false);
-	idx += s_bag_magic_len;
-
-	bool const records_parsed = parse_records(data, len, idx, callback, callback_ctx);
-	CHECK_RET(records_parsed, false);
+	CHECK_RET(len >= detail::s_bag_magic_len, false);
+	CHECK_RET(std::memcmp(data, detail::s_bag_magic, detail::s_bag_magic_len) == 0, false);
 
 	return true;
 }
 
-bool mk::bag::parse_records(void const* const& void_data, std::uint64_t const& len, std::uint64_t& idx, callback_t const& callback, void* const& callback_ctx)
+void const* mk::bag::adjust_data(void const* const& void_data)
+{
+	unsigned char const* const data = static_cast<unsigned char const*>(void_data);
+	return data + detail::s_bag_magic_len;
+}
+
+std::uint64_t mk::bag::adjust_len(std::uint64_t const& len)
+{
+	return len - detail::s_bag_magic_len;
+}
+
+bool mk::bag::parse_records(void const* const& void_data, std::uint64_t const& len, callback_t const& callback, void* const& callback_ctx)
 {
 	assert(callback);
 	unsigned char const* const data = static_cast<unsigned char const*>(void_data);
+	std::uint64_t idx = 0;
 	while(idx != len)
 	{
 		record_t record;

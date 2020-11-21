@@ -143,8 +143,10 @@ namespace mk
 		typedef bool(*callback_t)(void* const& ctx, callback_variant_e const& variant, void const* const& data);
 
 
-		bool parse_file(void const* const& data, std::uint64_t const& len, callback_t const& callback, void* const& callback_ctx);
-		bool parse_records(void const* const& data, std::uint64_t const& len, std::uint64_t& idx, callback_t const& callback, void* const& callback_ctx);
+		bool is_bag_file(void const* const& data, std::uint64_t const& len);
+		void const* adjust_data(void const* const& data);
+		std::uint64_t adjust_len(std::uint64_t const& len);
+		bool parse_records(void const* const& data, std::uint64_t const& len, callback_t const& callback, void* const& callback_ctx);
 		bool parse_fields(void const* const& data, std::uint64_t const& len, std::uint64_t& idx, std::uint32_t const& header_len, callback_t const& callback, void* const& callback_ctx);
 		bool parse_connection_data(field_t const* const& fields, int const& fields_count, data::connection_data_t* const& out_connection_data);
 

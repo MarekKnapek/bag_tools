@@ -13,6 +13,7 @@ namespace mk
 
 
 		bool print_file(native_char_t const* const& file_path);
+		bool print_records(void const* const& data, std::uint64_t const& len);
 
 
 	}
