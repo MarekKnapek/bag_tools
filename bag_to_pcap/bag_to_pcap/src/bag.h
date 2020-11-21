@@ -1,9 +1,11 @@
 #pragma once
 
 
-#include <cstdint> // std::uint64_t, std::uint32_t
+#include <array>
+#include <cstdint> // std::uint64_t, std::uint32_t, std::uint8_t
 #include <variant>
 #include <vector>
+#include <optional>
 
 
 namespace mk
@@ -22,6 +24,12 @@ namespace mk
 		{
 			unsigned char const* m_begin;
 			int m_len;
+		};
+
+		struct md5sum_t
+		{
+			std::uint64_t m_lo;
+			std::uint64_t m_hi;
 		};
 
 
@@ -82,6 +90,20 @@ namespace mk
 		namespace data
 		{
 
+			struct connection_data_t
+			{
+				std::optional<string_t> m_caller_id; // name of node sending data
+				string_t m_topic; // name of the topic the subscriber is connecting to
+				std::optional<string_t> m_service; // name of service the client is calling
+				md5sum_t m_md5sum; // md5sum of the message type
+				string_t m_type; // message type
+				string_t m_message_definition; // full text of message definition (output of gendeps --cat)
+				std::optional<string_t> m_error; // human-readable error message if the connection is not successful
+				std::optional<std::uint8_t> /*???*/ m_persistent; // sent from a service client to a service. If '1', keep connection open for multiple requests.
+				std::optional<std::uint8_t> /*???*/ m_tcp_nodelay; // sent from subscriber to publisher. If '1', publisher will set TCP_NODELAY on socket if possible
+				std::optional<std::uint8_t> m_latching; // publisher is in latching mode (i.e. sends the last value published to new subscribers)
+			};
+
 			struct index_data_ver_1_t
 			{
 				std::uint64_t m_time; // time at which the message was received
@@ -102,6 +124,8 @@ namespace mk
 			string_t m_name;
 			data_t m_value;
 		};
+		static constexpr int const s_fields_max = 8;
+		typedef std::array<field_t, s_fields_max> fields_t;
 
 		struct raw_header_t
 		{

@@ -35,6 +35,7 @@ typedef char native_char_t;
 bool bag_to_pcap(int const argc, native_char_t const* const* const argv);
 bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t const* const& output_file_name);
 bool print_records(mk::bag::records_t const& records);
+bool find_os_lidar_packets(mk::bag::records_t const& records, std::uint32_t* const& out_os_lidar_packets_connection);
 
 
 int main_function(int const argc, native_char_t const* const* const argv)
@@ -79,6 +80,10 @@ bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t cons
 
 	bool const printed = print_records(records);
 	CHECK_RET(printed, false);
+
+	std::uint32_t os_lidar_packets_connection;
+	bool const os_lidar_packets_found = find_os_lidar_packets(records, &os_lidar_packets_connection);
+	CHECK_RET(os_lidar_packets_found, false);
 
 	(void)output_file_name;
 
@@ -129,4 +134,40 @@ bool print_records(mk::bag::records_t const& records)
 		++i;
 	}
 	return true;
+}
+
+namespace mk{namespace bag{namespace detail{
+	bool parse_fields(unsigned char const* const& data, std::uint64_t const& len, std::uint64_t& idx, std::uint32_t const& header_len, fields_t* const& out_fields, int* const& out_fields_count);
+	bool parse_connection_data(field_t const* const& fields, int const& fields_count, data::connection_data_t* const& out_connection_data);
+}}}
+
+bool find_os_lidar_packets(mk::bag::records_t const& records, std::uint32_t* const& out_os_lidar_packets_connection)
+{
+	static constexpr char const s_os_lidar_packets_connection_topic_name[] = "/os_node/lidar_packets";
+	static constexpr int const s_os_lidar_packets_connection_topic_name_len = static_cast<int>(std::size(s_os_lidar_packets_connection_topic_name)) - 1;
+
+	assert(out_os_lidar_packets_connection);
+	std::uint32_t& os_lidar_packets_connection = *out_os_lidar_packets_connection;
+	for(mk::bag::record_t const& record : records)
+	{
+		bool const is_connection = std::visit(mk::make_overload([](mk::bag::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+		if(!is_connection) continue;
+		mk::bag::header::connection_t const& connection = std::get<mk::bag::header::connection_t>(record.m_header);
+		bool const is_os_lidar_packets_connection = connection.m_topic.m_len == s_os_lidar_packets_connection_topic_name_len && std::memcmp(connection.m_topic.m_begin, s_os_lidar_packets_connection_topic_name, s_os_lidar_packets_connection_topic_name_len) == 0;
+		if(!is_os_lidar_packets_connection) continue;
+		os_lidar_packets_connection = connection.m_conn;
+
+		std::uint64_t idx = 0;
+		mk::bag::fields_t os_lidar_packets_connection_fields;
+		int os_lidar_packets_connection_fields_count;
+		bool const fields_parsed = mk::bag::detail::parse_fields(record.m_data.m_begin, record.m_data.m_len, idx, record.m_data.m_len, &os_lidar_packets_connection_fields, &os_lidar_packets_connection_fields_count);
+		CHECK_RET(fields_parsed, false);
+
+		mk::bag::data::connection_data_t connection_data;
+		bool const connection_data_parsed = mk::bag::detail::parse_connection_data(os_lidar_packets_connection_fields.data(), os_lidar_packets_connection_fields_count, &connection_data);
+		CHECK_RET(connection_data_parsed, false);
+
+		return true;
+	}
+	return false;
 }
