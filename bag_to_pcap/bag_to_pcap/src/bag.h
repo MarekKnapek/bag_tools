@@ -127,27 +127,26 @@ namespace mk
 		static constexpr int const s_fields_max = 8;
 		typedef std::array<field_t, s_fields_max> fields_t;
 
-		struct raw_header_t
-		{
-			std::vector<field_t> m_fields;
-		};
-
-		struct raw_record_t
-		{
-			raw_header_t m_header;
-			data_t m_data;
-		};
-		typedef std::vector<raw_record_t> raw_records_t;
-
 		struct record_t
 		{
 			header::header_t m_header;
 			data_t m_data;
 		};
-		typedef std::vector<record_t> records_t;
 
 
-		bool parse(void const* const& data, std::uint64_t const& len, records_t* const& out_records);
+		enum class callback_variant_e
+		{
+			record,
+			field,
+		};
+
+		typedef bool(*callback_t)(void* const& ctx, callback_variant_e const& variant, void const* const& data);
+
+
+		bool parse_file(void const* const& data, std::uint64_t const& len, callback_t const& callback, void* const& callback_ctx);
+		bool parse_records(void const* const& data, std::uint64_t const& len, std::uint64_t& idx, callback_t const& callback, void* const& callback_ctx);
+		bool parse_fields(void const* const& data, std::uint64_t const& len, std::uint64_t& idx, std::uint32_t const& header_len, callback_t const& callback, void* const& callback_ctx);
+		bool parse_connection_data(field_t const* const& fields, int const& fields_count, data::connection_data_t* const& out_connection_data);
 
 
 	}

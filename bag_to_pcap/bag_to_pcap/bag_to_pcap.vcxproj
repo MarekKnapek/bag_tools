@@ -19,22 +19,43 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\bag.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\memory_mapped_file.cpp" />
-    <ClCompile Include="src\smart_handle.cpp" />
-    <ClCompile Include="src\utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="src\.editorconfig" />
     <None Include="src\.gitignore" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bag.cpp" />
+    <ClCompile Include="src\bag_print_file.cpp" />
+    <ClCompile Include="src\bag_to_pcap.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\read_only_memory_mapped_file.cpp" />
+    <ClCompile Include="src\read_only_memory_mapped_file_linux.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\read_only_memory_mapped_file_windows.cpp" />
+    <ClCompile Include="src\utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="src\bag.h" />
-    <ClInclude Include="src\memory_mapped_file.h" />
+    <ClInclude Include="src\bag_print_file.h" />
+    <ClInclude Include="src\cross_platform.h" />
     <ClInclude Include="src\overload.h" />
+    <ClInclude Include="src\read_only_memory_mapped_file.h" />
+    <ClInclude Include="src\read_only_memory_mapped_file_linux.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="src\read_only_memory_mapped_file_windows.h" />
     <ClInclude Include="src\scope_exit.h" />
-    <ClInclude Include="src\smart_handle.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

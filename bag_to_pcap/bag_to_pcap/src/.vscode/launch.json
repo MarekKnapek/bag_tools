@@ -3,14 +3,14 @@
 	"configurations": [
 		{
 			"name": "Launch debug.",
-			"preLaunchTask": "Build debug.",
+			"preLaunchTask": "Build GCC debug.",
 			"type": "cppdbg",
 			"request": "launch",
 			"cwd": "${workspaceFolder}",
 			"program": "${workspaceFolder}/bag_to_pcap_debug.bin",
 			"args": [
-				"input.bag",
-				"output.pcap"
+				"/media/me/738a7408-4ca2-4805-a24e-1783126ff7ee/home/me/dev/shared/pcaps/os1/os1-1.13_2020-06-17-06-21-36_0.bag",
+				"/media/me/738a7408-4ca2-4805-a24e-1783126ff7ee/home/me/dev/shared/pcaps/os1/os1-1.13_2020-06-17-06-21-36_0.pcap"
 			],
 			"stopAtEntry": false,
 			"externalConsole": false,

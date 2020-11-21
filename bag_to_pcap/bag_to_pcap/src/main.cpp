@@ -1,14 +1,9 @@
-#ifdef _MSC_VER
-#include "memory_mapped_file.h"
-#else
-#include "read_only_file.h"
-#include "read_only_file_mapping.h"
-#endif
-
+#include "read_only_memory_mapped_file.h"
 #include "bag.h"
 #include "overload.h"
 #include "scope_exit.h"
 #include "utils.h"
+#include "cross_platform.h"
 
 #include <algorithm> // std::find, std::all_of, std::any_of
 #include <array>
@@ -22,20 +17,17 @@
 #include <utility> // std::move
 #include <vector>
 
-
-#ifdef _MSC_VER
-typedef wchar_t native_char_t;
-#define main_function wmain
-#else
-typedef char native_char_t;
-#define main_function main
-#endif
+#include <lz4frame.h>
 
 
 bool bag_to_pcap(int const argc, native_char_t const* const* const argv);
 bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t const* const& output_file_name);
-bool print_records(mk::bag::records_t const& records);
-bool find_os_lidar_packets(mk::bag::records_t const& records, std::uint32_t* const& out_os_lidar_packets_connection);
+bool get_os_channel(mk::read_only_memory_mapped_file_t const& rommf, std::uint32_t* const& out_os_channel);
+bool process_record_os_channel(mk::bag::record_t const& record, std::optional<std::uint32_t>& os_channel_opt);
+bool filter_os_node_lidar_packets_connection_topic(mk::bag::record_t const& record, bool* const& out_satisfies);
+
+/*bool find_os_lidar_packets(mk::bag::records_t const& records, std::uint32_t* const& out_os_lidar_packets_connection);
+bool process_os_lidar_packets_connection(mk::bag::records_t const& records, std::uint32_t const& os_lidar_packets_connection);*/
 
 
 int main_function(int const argc, native_char_t const* const* const argv)
@@ -61,84 +53,130 @@ bool bag_to_pcap(int const argc, native_char_t const* const* const argv)
 
 bool bag_to_pcap(native_char_t const* const& input_file_name, native_char_t const* const& output_file_name)
 {
-	#ifdef _MSC_VER
-	memory_mapped_file const input_file{input_file_name};
-	CHECK_RET(input_file.begin() != nullptr, false);
-	unsigned char const* const input_file_ptr = reinterpret_cast<unsigned char const*>(input_file.begin());
-	std::uint64_t const input_file_size = input_file.size();
-	#else
-	mk::read_only_file_t const input_file{input_file_name};
+	mk::read_only_memory_mapped_file_t const input_file{input_file_name};
 	CHECK_RET(input_file, false);
-	mk::read_only_file_mapping_t const input_file_mapping{input_file};
-	CHECK_RET(input_file_mapping, false);
-	unsigned char const* const input_file_ptr = static_cast<unsigned char const*>(input_file_mapping.get());
-	std::uint64_t const input_file_size = input_file_mapping.get_size();
-	#endif
 
-	mk::bag::records_t records;
-	CHECK_RET(mk::bag::parse(input_file_ptr, input_file_size, &records), false);
+	std::uint32_t os_channel;
+	bool const got_os_channel = get_os_channel(input_file, &os_channel);
+	CHECK_RET(got_os_channel, false);
 
-	bool const printed = print_records(records);
-	CHECK_RET(printed, false);
-
-	std::uint32_t os_lidar_packets_connection;
+	/*std::uint32_t os_lidar_packets_connection;
 	bool const os_lidar_packets_found = find_os_lidar_packets(records, &os_lidar_packets_connection);
 	CHECK_RET(os_lidar_packets_found, false);
+
+	bool const processed = process_os_lidar_packets_connection(records, os_lidar_packets_connection);
+	CHECK_RET(processed, false);*/
 
 	(void)output_file_name;
 
 	return true;
 }
 
-
-char const* get_record_type(mk::bag::record_t const& record)
+bool get_os_channel(mk::read_only_memory_mapped_file_t const& rommf, std::uint32_t* const& out_os_channel)
 {
-	return std::visit(mk::make_overload
-	(
-		[](mk::bag::header::bag_t const&) -> char const* { return "bag"; },
-		[](mk::bag::header::chunk_t const&) -> char const* { return "chunk"; },
-		[](mk::bag::header::connection_t const&) -> char const* { return "connection"; },
-		[](mk::bag::header::message_data_t const&) -> char const* { return "message_data"; },
-		[](mk::bag::header::index_data_t const&) -> char const* { return "index_data"; },
-		[](mk::bag::header::chunk_info_t const&) -> char const* { return "chunk_info"; }
-	), record.m_header);
-}
+	assert(out_os_channel);
+	std::uint32_t& os_channel = *out_os_channel;
 
-bool get_record_details(mk::bag::record_t const& record, std::array<char, 256>& buff)
-{
-	bool const formatted = std::visit(mk::make_overload
-	(
-		[&](mk::bag::header::bag_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "index_pos = %" PRIu64 ", conn_count = %" PRIu32 ", chunk_count = %" PRIu32 "", obj.m_index_pos, obj.m_conn_count, obj.m_chunk_count); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
-		[&](mk::bag::header::chunk_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "compression = %.*s, size = %" PRIu32 "", obj.m_compression.m_len, obj.m_compression.m_begin, obj.m_size); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
-		[&](mk::bag::header::connection_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "conn = %" PRIu32 ", topic = %.*s", obj.m_conn, obj.m_topic.m_len, obj.m_topic.m_begin); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
-		[&](mk::bag::header::message_data_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "conn = %" PRIu32 ", time = %" PRIu64 "", obj.m_conn, obj.m_time); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
-		[&](mk::bag::header::index_data_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "ver = %" PRIu32 ", conn = %" PRIu32 ", count = %" PRIu32 "", obj.m_ver, obj.m_conn, obj.m_count); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; },
-		[&](mk::bag::header::chunk_info_t const& obj) -> bool { int const formatted = std::snprintf(buff.data(), buff.size(), "ver = %" PRIu32 ", chunk_pos = %" PRIu64 ", start_time = %" PRIu64 ", end_time = %" PRIu64 ", count = %" PRIu32 "", obj.m_ver, obj.m_chunk_pos, obj.m_start_time, obj.m_end_time, obj.m_count); CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false); return true; }
-	), record.m_header);
-	CHECK_RET(formatted, false);
-	return true;
-}
+	unsigned char const* const input_file_ptr = static_cast<unsigned char const*>(rommf.get_data());
+	std::uint64_t const input_file_size = rommf.get_size();
 
-bool print_records(mk::bag::records_t const& records)
-{
-	int i = 0;
-	for(mk::bag::record_t const& record : records)
+	std::optional<std::uint32_t> os_channel_opt = std::nullopt;
+	static constexpr auto const s_record_callback = [](void* const& ctx, mk::bag::callback_variant_e const& variant, void const* const& data) -> bool
 	{
-		std::array<char, 256> buff;
-		std::array<char, 256> buff_details;
-		bool const got_details = get_record_details(record, buff_details);
-		CHECK_RET(got_details, false);
-		int const formatted = std::snprintf(buff.data(), buff.size(), "Record #%d, type = %s, size = %d, %s.\n", i, get_record_type(record), record.m_data.m_len, buff_details.data());
-		CHECK_RET(formatted >= 0 && formatted < static_cast<int>(buff.size()), false);
-		std::printf("%s", buff.data());
-		++i;
-	}
+		std::optional<std::uint32_t>& os_channel_opt = *static_cast<std::optional<std::uint32_t>*>(ctx);
+		CHECK_RET(variant == mk::bag::callback_variant_e::record, false);
+		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
+
+		bool const processed = process_record_os_channel(record, os_channel_opt);
+		CHECK_RET(processed, false);
+
+		return true;
+	};
+	bool const file_parsed = mk::bag::parse_file(input_file_ptr, input_file_size, s_record_callback, &os_channel_opt);
+	CHECK_RET(file_parsed, false);
+
+	CHECK_RET(os_channel_opt.has_value(), false);
+	os_channel = *os_channel_opt;
+
 	return true;
 }
 
-namespace mk{namespace bag{namespace detail{
+bool process_record_os_channel(mk::bag::record_t const& record, std::optional<std::uint32_t>& os_channel_opt)
+{
+	bool is_os_node_lidar_packets_connection_topic;
+	bool const filtered = filter_os_node_lidar_packets_connection_topic(record, &is_os_node_lidar_packets_connection_topic);
+	CHECK_RET(filtered, false);
+	if(!is_os_node_lidar_packets_connection_topic) return true;
+
+	/*struct fields_callback_ctx_t
+	{
+		mk::bag::fields_t& m_fields;
+		int& m_fields_count;
+	};
+	static constexpr auto const s_field_callback = [](void* const& ctx, mk::bag::callback_variant_e const& variant, void const* const& data) -> bool
+	{
+		fields_callback_ctx_t& fields_callback_ctx = *static_cast<fields_callback_ctx_t*>(ctx);
+		CHECK_RET(variant == mk::bag::callback_variant_e::field, false);
+		mk::bag::field_t const& field = *static_cast<mk::bag::field_t const*>(data);
+
+		CHECK_RET(fields_callback_ctx.m_fields_count < mk::bag::s_fields_max, false);
+		fields_callback_ctx.m_fields[fields_callback_ctx.m_fields_count] = field;
+		++fields_callback_ctx.m_fields_count;
+
+		return true;
+	};
+
+	std::uint64_t idx = 0;
+	mk::bag::fields_t fields;
+	int fields_count = 0;
+	fields_callback_ctx_t fields_callback_ctx{fields, fields_count};
+	bool const fields_parsed = mk::bag::parse_fields(record.m_data.m_begin, record.m_data.m_len, idx, record.m_data.m_len, s_field_callback, &fields_callback_ctx);
+	CHECK_RET(fields_parsed, false);
+
+	mk::bag::data::connection_data_t connection_data;
+	bool const connection_data_parsed = mk::bag::parse_connection_data(fields.data(), fields_count, &connection_data);
+	CHECK_RET(connection_data_parsed, false);*/
+
+	CHECK_RET(!os_channel_opt.has_value(), false);
+	os_channel_opt = std::get<mk::bag::header::connection_t>(record.m_header).m_conn;
+
+	return true;
+}
+
+bool filter_os_node_lidar_packets_connection_topic(mk::bag::record_t const& record, bool* const& out_satisfies)
+{
+	static constexpr char const s_os_node_lidar_packets_connection_topic_name[] = "/os_node/lidar_packets";
+	static constexpr int const s_os_node_lidar_packets_connection_topic_name_len = static_cast<int>(std::size(s_os_node_lidar_packets_connection_topic_name)) - 1;
+
+	assert(out_satisfies);
+	bool& satisfies = *out_satisfies;
+
+	bool const is_connection = std::visit(mk::make_overload([](mk::bag::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+	if(!is_connection)
+	{
+		satisfies = false;
+		return true;
+	}
+	mk::bag::header::connection_t const& connection = std::get<mk::bag::header::connection_t>(record.m_header);
+
+	bool const is_os_node_lidar_packets_connection_topic = connection.m_topic.m_len == s_os_node_lidar_packets_connection_topic_name_len && std::memcmp(connection.m_topic.m_begin, s_os_node_lidar_packets_connection_topic_name, s_os_node_lidar_packets_connection_topic_name_len) == 0;
+	if(!is_os_node_lidar_packets_connection_topic)
+	{
+		satisfies = false;
+		return true;
+	}
+
+	satisfies = true;
+	return true;
+}
+
+
+
+
+/*namespace mk{namespace bag{namespace detail{
 	bool parse_fields(unsigned char const* const& data, std::uint64_t const& len, std::uint64_t& idx, std::uint32_t const& header_len, fields_t* const& out_fields, int* const& out_fields_count);
 	bool parse_connection_data(field_t const* const& fields, int const& fields_count, data::connection_data_t* const& out_connection_data);
+	bool parse_record(unsigned char const* const& data, std::uint64_t const& len, std::uint64_t& idx, record_t* const& out_record);
 }}}
 
 bool find_os_lidar_packets(mk::bag::records_t const& records, std::uint32_t* const& out_os_lidar_packets_connection)
@@ -171,3 +209,56 @@ bool find_os_lidar_packets(mk::bag::records_t const& records, std::uint32_t* con
 	}
 	return false;
 }
+
+bool decompress(void const* const& input, int const& input_len, void* const& output, int const& output_len)
+{
+	LZ4F_decompressionContext_t ctx;
+	LZ4F_errorCode_t const context_created = LZ4F_createDecompressionContext(&ctx, LZ4F_VERSION);
+	CHECK_RET(!LZ4F_isError(context_created), false);
+	auto const context_free = mk::make_scope_exit([&](){ LZ4F_errorCode_t const context_freed = LZ4F_freeDecompressionContext(ctx); CHECK_RET_V(context_freed == 0); });
+
+	std::size_t destination_size = output_len;
+	std::size_t source_size = input_len;
+	std::size_t const decompressed = LZ4F_decompress(ctx, output, &destination_size, input, &source_size, nullptr);
+	CHECK_RET(decompressed == 0 && destination_size == static_cast<std::size_t>(output_len) && source_size == static_cast<std::size_t>(input_len), false);
+
+	return true;
+}
+
+bool process_os_lidar_packet_connection(mk::bag::record_t const& record, std::uint32_t const& os_lidar_packets_connection)
+{
+	static constexpr char const s_compression_lz4_name[] = "lz4";
+	static constexpr int const s_compression_lz4_name_len = static_cast<int>(std::size(s_compression_lz4_name)) - 1;
+
+	bool const is_chunk = std::visit(mk::make_overload([](mk::bag::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+	if(!is_chunk) return true;
+	mk::bag::header::chunk_t const& chunk = std::get<mk::bag::header::chunk_t>(record.m_header);
+
+	bool const is_lz4 = chunk.m_compression.m_len == s_compression_lz4_name_len && std::memcmp(chunk.m_compression.m_begin, s_compression_lz4_name, s_compression_lz4_name_len) == 0;
+	CHECK_RET(is_lz4, false);
+
+	std::vector<unsigned char> uncompressed_data;
+	uncompressed_data.resize(chunk.m_size);
+	bool const decompressed = decompress(record.m_data.m_begin, record.m_data.m_len, uncompressed_data.data(), static_cast<int>(uncompressed_data.size()));
+	CHECK_RET(decompressed, false);
+
+	std::uint64_t idx = 0;
+	for(;;)
+	{
+		mk::bag::record_t new_record;
+		bool const parsed = mk::bag::detail::parse_record(uncompressed_data.data(), uncompressed_data.size(), idx, &new_record);
+		CHECK_RET(parsed, false);
+	}
+
+	return true;
+}
+
+bool process_os_lidar_packets_connection(mk::bag::records_t const& records, std::uint32_t const& os_lidar_packets_connection)
+{
+	for(mk::bag::record_t const& record : records)
+	{
+		bool const processed = process_os_lidar_packet_connection(record, os_lidar_packets_connection);
+		CHECK_RET(processed, false);
+	}
+	return true;
+}*/

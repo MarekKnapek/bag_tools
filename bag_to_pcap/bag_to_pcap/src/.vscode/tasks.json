@@ -15,7 +15,8 @@
 				"-Wpedantic",
 				"bag_to_pcap.cpp",
 				"-o",
-				"bag_to_pcap_debug.bin"
+				"bag_to_pcap_debug.bin",
+				"-llz4"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -42,7 +43,8 @@
 				"-Wpedantic",
 				"bag_to_pcap.cpp",
 				"-o",
-				"bag_to_pcap.bin"
+				"bag_to_pcap.bin",
+				"-llz4"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -67,6 +69,7 @@
 				"-Wall",
 				"-Wextra",
 				"-Wpedantic",
+				"-llz4",
 				"bag_to_pcap.cpp",
 				"-o",
 				"bag_to_pcap_debug.bin"
@@ -94,6 +97,7 @@
 				"-Wall",
 				"-Wextra",
 				"-Wpedantic",
+				"-llz4",
 				"bag_to_pcap.cpp",
 				"-o",
 				"bag_to_pcap.bin"
