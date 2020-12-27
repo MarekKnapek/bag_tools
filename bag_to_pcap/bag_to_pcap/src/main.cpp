@@ -1,5 +1,6 @@
 #include "read_only_memory_mapped_file.h"
 #include "bag.h"
+#include "bag_print_file.h"
 #include "overload.h"
 #include "scope_exit.h"
 #include "utils.h"
@@ -335,7 +336,7 @@ bool process_record_os_chunk(mk::bag::record_t const& record, std::uint32_t cons
 	auto const& record_compressed_data_len = record.m_data.m_len;
 	std::vector<unsigned char> record_decompressed_data;
 	record_decompressed_data.resize(chunk.m_size);
-	bool const decompressed = decompress(record_compressed_data, record_compressed_data_len, record_decompressed_data.data(), record_decompressed_data.size());
+	bool const decompressed = decompress(record_compressed_data, record_compressed_data_len, record_decompressed_data.data(), static_cast<int>(record_decompressed_data.size()));
 	CHECK_RET(decompressed, false);
 
 	CHECK_RET(mk::bag::print_records(record_decompressed_data.data(), record_decompressed_data.size()), false);
@@ -422,8 +423,8 @@ bool process_inner_os_record(mk::bag::record_t const& record, std::uint32_t cons
 		a.orig_len = 12650;
 		static std::chrono::milliseconds xxx;
 		xxx += std::chrono::milliseconds(2);
-		a.ts_sec = std::chrono::duration_cast<std::chrono::seconds>(xxx).count();
-		a.ts_usec = std::chrono::duration_cast<std::chrono::microseconds>(xxx - std::chrono::duration_cast<std::chrono::seconds>(xxx)).count();
+		a.ts_sec = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(xxx).count());
+		a.ts_usec = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::microseconds>(xxx - std::chrono::duration_cast<std::chrono::seconds>(xxx)).count());
 		brutal_header_t b{};
 		g_ofs.write((char const*)&a, sizeof(a));
 		g_ofs.write((char const*)&b, sizeof(b));
