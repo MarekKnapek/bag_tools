@@ -328,26 +328,69 @@ bool process_os_records(mk::read_only_memory_mapped_file_t const& rommf, std::ui
 	return true;
 }
 
-bool process_record_os_chunk(mk::bag::record_t const& record, std::uint32_t const& os_channel)
+bool decompress_lz4(void const* const input, int const input_len_, void* const output, int const output_len_)
 {
+	LZ4F_decompressionContext_t ctx;
+	LZ4F_errorCode_t const context_created = LZ4F_createDecompressionContext(&ctx, LZ4F_VERSION);
+	CHECK_RET(!LZ4F_isError(context_created), false);
+	auto const context_free = mk::make_scope_exit([&](){ LZ4F_errorCode_t const context_freed = LZ4F_freeDecompressionContext(ctx); CHECK_RET_V(context_freed == 0); });
+
+	std::size_t output_len = output_len_;
+	std::size_t input_len = input_len_;
+	std::size_t const decompressed = LZ4F_decompress(ctx, output, &output_len, input, &input_len, nullptr);
+	CHECK_RET(decompressed == 0 && output_len == static_cast<std::size_t>(output_len_) && input_len == static_cast<std::size_t>(input_len_), false);
+
+	return true;
+}
+
+bool decompress_record_chunk_data(mk::bag::record_t const& record, std::vector<unsigned char>* const helper_vector_, void const** out_decompressed_data)
+{
+	static constexpr char const s_compression_none_name[] = "none";
+	static constexpr int const s_compression_none_name_len = static_cast<int>(std::size(s_compression_none_name)) - 1;
 	static constexpr char const s_compression_lz4_name[] = "lz4";
 	static constexpr int const s_compression_lz4_name_len = static_cast<int>(std::size(s_compression_lz4_name)) - 1;
 
+	assert(out_decompressed_data);
+	assert(std::visit(mk::make_overload([](mk::bag::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header));
+
+	mk::bag::header::chunk_t const& chunk = std::get<mk::bag::header::chunk_t>(record.m_header);
+
+	bool const is_none = chunk.m_compression.m_len == s_compression_none_name_len && std::memcmp(chunk.m_compression.m_begin, s_compression_none_name, s_compression_none_name_len) == 0;
+	if(is_none)
+	{
+		void const*& decompressed_data = *out_decompressed_data;
+		decompressed_data = record.m_data.m_begin;
+		return true;
+	}
+
+	bool const is_lz4 = chunk.m_compression.m_len == s_compression_lz4_name_len && std::memcmp(chunk.m_compression.m_begin, s_compression_lz4_name, s_compression_lz4_name_len) == 0;
+	if(is_lz4)
+	{
+		std::vector<unsigned char>& helper_vector = *helper_vector_;
+		helper_vector.resize(chunk.m_size);
+		bool const decompressed = decompress_lz4(record.m_data.m_begin, record.m_data.m_len, helper_vector.data(), static_cast<int>(chunk.m_size));
+		CHECK_RET(decompressed, false);
+
+		void const*& decompressed_data = *out_decompressed_data;
+		decompressed_data = helper_vector.data();
+		return true;
+	}
+
+	return false;
+}
+
+bool process_record_os_chunk(mk::bag::record_t const& record, std::uint32_t const& os_channel)
+{
 	bool const is_chunk = std::visit(mk::make_overload([](mk::bag::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
 	if(!is_chunk) return true;
 	mk::bag::header::chunk_t const& chunk = std::get<mk::bag::header::chunk_t>(record.m_header);
 
-	bool const is_lz4 = chunk.m_compression.m_len == s_compression_lz4_name_len && std::memcmp(chunk.m_compression.m_begin, s_compression_lz4_name, s_compression_lz4_name_len) == 0;
-	CHECK_RET(is_lz4, false);
-
-	auto const& record_compressed_data = record.m_data.m_begin;
-	auto const& record_compressed_data_len = record.m_data.m_len;
-	std::vector<unsigned char> record_decompressed_data;
-	record_decompressed_data.resize(chunk.m_size);
-	bool const decompressed = decompress(record_compressed_data, record_compressed_data_len, record_decompressed_data.data(), static_cast<int>(record_decompressed_data.size()));
+	void const* decompressed_data;
+	std::vector<unsigned char> helper_vector;
+	bool const decompressed = decompress_record_chunk_data(record, &helper_vector, &decompressed_data);
 	CHECK_RET(decompressed, false);
 
-	CHECK_RET(mk::bag::print_records(record_decompressed_data.data(), record_decompressed_data.size()), false);
+	CHECK_RET(mk::bag::print_records(decompressed_data, chunk.m_size), false);
 
 	static constexpr auto const s_record_callback = [](void* const& ctx, mk::bag::callback_variant_e const& variant, void const* const& data) -> bool
 	{
@@ -361,7 +404,7 @@ bool process_record_os_chunk(mk::bag::record_t const& record, std::uint32_t cons
 		return true;
 	};
 
-	bool const parsed = mk::bag::parse_records(record_decompressed_data.data(), record_decompressed_data.size(), s_record_callback, &const_cast<std::uint32_t&>(os_channel));
+	bool const parsed = mk::bag::parse_records(decompressed_data, chunk.m_size, s_record_callback, &const_cast<std::uint32_t&>(os_channel));
 	CHECK_RET(parsed, false);
 
 	return true;
