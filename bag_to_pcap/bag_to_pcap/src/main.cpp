@@ -390,8 +390,6 @@ bool process_record_os_chunk(mk::bag::record_t const& record, std::uint32_t cons
 	bool const decompressed = decompress_record_chunk_data(record, &helper_vector, &decompressed_data);
 	CHECK_RET(decompressed, false);
 
-	CHECK_RET(mk::bag::print_records(decompressed_data, chunk.m_size), false);
-
 	static constexpr auto const s_record_callback = [](void* const& ctx, mk::bag::callback_variant_e const& variant, void const* const& data) -> bool
 	{
 		std::uint32_t const& os_channel = *static_cast<std::uint32_t const*>(ctx);
@@ -427,6 +425,14 @@ bool decompress(void const* const& compressed_input, int const& compressed_input
 #include <chrono>
 bool process_inner_os_record(mk::bag::record_t const& record, std::uint32_t const& os_channel)
 {
+	static constexpr int const s_udp_header_len = 8;
+	static constexpr int const s_ip_header_len = 28;
+	static constexpr int const s_brutal_header_len = 42;
+	static constexpr int const s_payload_len = 12608;
+	static constexpr int const s_pcap_payload_len = s_payload_len + s_brutal_header_len; // 12650
+	static constexpr int const s_bag_payload_len = 12613;
+	static constexpr std::uint16_t const s_destination_port_number = 7502;
+
 	bool const is_message_data = std::visit(mk::make_overload([](mk::bag::header::message_data_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
 	if(!is_message_data) return true;
 	mk::bag::header::message_data_t const& message_data = std::get<mk::bag::header::message_data_t>(record.m_header);
@@ -434,7 +440,7 @@ bool process_inner_os_record(mk::bag::record_t const& record, std::uint32_t cons
 	bool const is_my_connection = message_data.m_conn == os_channel;
 	if(!is_my_connection) return true;
 
-	bool const is_good_size = record.m_data.m_len == 12613;
+	bool const is_good_size = record.m_data.m_len == s_bag_payload_len;
 	if(!is_good_size) return true;
 
 	{
@@ -469,19 +475,64 @@ bool process_inner_os_record(mk::bag::record_t const& record, std::uint32_t cons
 			unsigned char udp_checksum[2];
 		};
 		static_assert(sizeof(brutal_header_t) == 42);
-		pcaprec_hdr_t a{};
-		a.incl_len = 12650;
-		a.orig_len = 12650;
+
 		static std::chrono::milliseconds xxx;
 		xxx += std::chrono::milliseconds(2);
-		a.ts_sec = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(xxx).count());
-		a.ts_usec = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::microseconds>(xxx - std::chrono::duration_cast<std::chrono::seconds>(xxx)).count());
-		brutal_header_t b{};
-		g_ofs.write((char const*)&a, sizeof(a));
-		g_ofs.write((char const*)&b, sizeof(b));
+
+		pcaprec_hdr_t aaa;
+		aaa.ts_sec = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(xxx).count());
+		aaa.ts_usec = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::microseconds>(xxx - std::chrono::duration_cast<std::chrono::seconds>(xxx)).count());
+		aaa.incl_len = s_pcap_payload_len;
+		aaa.orig_len = s_pcap_payload_len;
+		g_ofs.write((char const*)&aaa, sizeof(aaa));
+
+		brutal_header_t brutal_header{};
+		brutal_header.eth_ig_1[0] = 0xFF;
+		brutal_header.eth_ig_1[1] = 0xFF;
+		brutal_header.eth_ig_1[2] = 0xFF;
+		brutal_header.eth_addr_1[0] = 0xFF;
+		brutal_header.eth_addr_1[1] = 0xFF;
+		brutal_header.eth_addr_1[2] = 0xFF;
+		brutal_header.eth_ig_2[0] = 0x60;
+		brutal_header.eth_ig_2[1] = 0x76;
+		brutal_header.eth_ig_2[2] = 0x88;
+		brutal_header.eth_addr_2[0] = 0x00;
+		brutal_header.eth_addr_2[1] = 0x00;
+		brutal_header.eth_addr_2[2] = 0x00;
+		brutal_header.eth_type[0] = 0x08;
+		brutal_header.eth_type[1] = 0x00;
+		brutal_header.ip_hdr_len[0] = 0x45;
+		brutal_header.ip_dsfield_enc[0] = 0x00;
+		brutal_header.ip_len[0] = ((s_ip_header_len + s_payload_len) >> (1 * 8)) & 0xFF;
+		brutal_header.ip_len[1] = ((s_ip_header_len + s_payload_len) >> (0 * 8)) & 0xFF;
+		brutal_header.ip_id[0] = 0x00;
+		brutal_header.ip_id[1] = 0x00;
+		brutal_header.ip_frag_offset[0] = 0x40;
+		brutal_header.ip_frag_offset[1] = 0x00;
+		brutal_header.ip_ttl[0] = 0xFF;
+		brutal_header.ip_proto[0] = 0x11;
+		brutal_header.ip_checksum[0] = 0x00; // ???
+		brutal_header.ip_checksum[1] = 0x00; // ???
+		brutal_header.ip_src[0] = (192) & 0xFF;
+		brutal_header.ip_src[1] = (168) & 0xFF;
+		brutal_header.ip_src[2] = (2) & 0xFF;
+		brutal_header.ip_src[3] = (2) & 0xFF;
+		brutal_header.ip_dst[0] = 0xFF;
+		brutal_header.ip_dst[1] = 0xFF;
+		brutal_header.ip_dst[2] = 0xFF;
+		brutal_header.ip_dst[3] = 0xFF;
+		brutal_header.udp_src_port[0] = ((s_destination_port_number + 0) >> (1 * 8)) & 0xFF;
+		brutal_header.udp_src_port[1] = ((s_destination_port_number + 0) >> (0 * 8)) & 0xFF;
+		brutal_header.udp_dst_port[0] = ((s_destination_port_number + 0) >> (1 * 8)) & 0xFF;
+		brutal_header.udp_dst_port[1] = ((s_destination_port_number + 0) >> (0 * 8)) & 0xFF;
+		brutal_header.udp_len[0] = ((s_udp_header_len + s_payload_len) >> (1 * 8)) & 0xFF;
+		brutal_header.udp_len[1] = ((s_udp_header_len + s_payload_len) >> (0 * 8)) & 0xFF;
+		brutal_header.udp_checksum[0] = 0x00;
+		brutal_header.udp_checksum[1] = 0x00;
+		g_ofs.write((char const*)&brutal_header, sizeof(brutal_header));
 	}
 
-	g_ofs.write(reinterpret_cast<char const*>(record.m_data.m_begin+5), record.m_data.m_len-5);
+	g_ofs.write(reinterpret_cast<char const*>(record.m_data.m_begin + 4), record.m_data.m_len - 5);
 
 	return true;
 }
