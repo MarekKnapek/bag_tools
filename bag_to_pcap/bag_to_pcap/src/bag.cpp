@@ -486,8 +486,7 @@ bool mk::bag::is_bag_file(void const* const& void_data, std::uint64_t const& len
 
 void const* mk::bag::adjust_data(void const* const& void_data)
 {
-	unsigned char const* const data = static_cast<unsigned char const*>(void_data);
-	return data + detail::s_bag_magic_len;
+	return static_cast<unsigned char const*>(void_data) + detail::s_bag_magic_len;
 }
 
 std::uint64_t mk::bag::adjust_len(std::uint64_t const& len)
