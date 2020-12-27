@@ -178,8 +178,10 @@ bool process_record_os_channel(mk::bag::record_t const& record, std::optional<st
 
 bool filter_os_node_lidar_packets_connection_topic(mk::bag::record_t const& record, bool* const& out_satisfies)
 {
-	static constexpr char const s_os_node_lidar_packets_connection_topic_name[] = "/os_node/lidar_packets";
-	static constexpr int const s_os_node_lidar_packets_connection_topic_name_len = static_cast<int>(std::size(s_os_node_lidar_packets_connection_topic_name)) - 1;
+	static constexpr char const s_os_node_lidar_packets_connection_topic0_name[] = "/os_node/lidar_packets";
+	static constexpr int const s_os_node_lidar_packets_connection_topic0_name_len = static_cast<int>(std::size(s_os_node_lidar_packets_connection_topic0_name)) - 1;
+	static constexpr char const s_os_node_lidar_packets_connection_topic1_name_len[] = "/os1_node/lidar_packets";
+	static constexpr int const s_os_node_lidar_packets_connection_topic1_name_len_len = static_cast<int>(std::size(s_os_node_lidar_packets_connection_topic1_name_len)) - 1;
 
 	assert(out_satisfies);
 	bool& satisfies = *out_satisfies;
@@ -192,14 +194,20 @@ bool filter_os_node_lidar_packets_connection_topic(mk::bag::record_t const& reco
 	}
 	mk::bag::header::connection_t const& connection = std::get<mk::bag::header::connection_t>(record.m_header);
 
-	bool const is_os_node_lidar_packets_connection_topic = connection.m_topic.m_len == s_os_node_lidar_packets_connection_topic_name_len && std::memcmp(connection.m_topic.m_begin, s_os_node_lidar_packets_connection_topic_name, s_os_node_lidar_packets_connection_topic_name_len) == 0;
-	if(!is_os_node_lidar_packets_connection_topic)
+	bool const is_os_node_lidar_0_packets_connection_topic = connection.m_topic.m_len == s_os_node_lidar_packets_connection_topic0_name_len && std::memcmp(connection.m_topic.m_begin, s_os_node_lidar_packets_connection_topic0_name, s_os_node_lidar_packets_connection_topic0_name_len) == 0;
+	if(is_os_node_lidar_0_packets_connection_topic)
 	{
-		satisfies = false;
+		satisfies = true;
+		return true;
+	}
+	bool const is_os_node_lidar_1_packets_connection_topic = connection.m_topic.m_len == s_os_node_lidar_packets_connection_topic1_name_len_len && std::memcmp(connection.m_topic.m_begin, s_os_node_lidar_packets_connection_topic1_name_len, s_os_node_lidar_packets_connection_topic1_name_len_len) == 0;
+	if(is_os_node_lidar_1_packets_connection_topic)
+	{
+		satisfies = true;
 		return true;
 	}
 
-	satisfies = true;
+	satisfies = false;
 	return true;
 }
 
