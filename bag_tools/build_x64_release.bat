@@ -5,4 +5,4 @@ SET "LIB=%LIB%;%~dp0..\..\..\..\lz4-1.9.3\build\VS2019\bin\x64_Release"
 SET UseEnv=true
 
 cd "%~dp0"
-msbuild.exe "%~dp0bag_to_pcap.sln" /property:Platform=x64 /property:Configuration=Release
+msbuild.exe "%~dp0bag_tools.sln" /property:Platform=x64 /property:Configuration=Release
