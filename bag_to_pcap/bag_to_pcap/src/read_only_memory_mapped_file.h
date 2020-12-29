@@ -28,8 +28,9 @@ namespace mk
 		read_only_memory_mapped_file_t& operator=(read_only_memory_mapped_file_t&& other) noexcept;
 		~read_only_memory_mapped_file_t() noexcept;
 		void swap(read_only_memory_mapped_file_t& other) noexcept;
-	public:
 		explicit operator bool() const;
+		void reset();
+	public:
 		void const* get_data() const;
 		std::uint64_t get_size() const;
 	private:

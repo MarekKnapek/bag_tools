@@ -86,6 +86,11 @@ mk::read_only_memory_mapped_file_windows_t::operator bool() const
 	return m_view != s_invalid_view;
 }
 
+void mk::read_only_memory_mapped_file_windows_t::reset()
+{
+	*this = read_only_memory_mapped_file_windows_t{};
+}
+
 void const* mk::read_only_memory_mapped_file_windows_t::get_data() const
 {
 	return m_view;

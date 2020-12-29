@@ -2,8 +2,8 @@
 
 #include "utils.h"
 
-#include <utility> // std::swap
 #include <cassert>
+#include <utility> // std::swap
 
 
 mk::read_only_memory_mapped_file_t::read_only_memory_mapped_file_t() noexcept :
@@ -41,6 +41,11 @@ void mk::read_only_memory_mapped_file_t::swap(read_only_memory_mapped_file_t& ot
 mk::read_only_memory_mapped_file_t::operator bool() const
 {
 	return m_native_file.operator bool();
+}
+
+void mk::read_only_memory_mapped_file_t::reset()
+{
+	*this = read_only_memory_mapped_file_t{};
 }
 
 void const* mk::read_only_memory_mapped_file_t::get_data() const

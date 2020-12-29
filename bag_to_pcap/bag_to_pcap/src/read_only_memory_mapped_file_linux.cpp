@@ -2,8 +2,8 @@
 
 #include "utils.h"
 
-#include <utility> // std::swap
 #include <cassert>
+#include <utility> // std::swap
 
 // open
 #include <sys/types.h>
@@ -85,6 +85,11 @@ void mk::read_only_memory_mapped_file_linux_t::swap(read_only_memory_mapped_file
 mk::read_only_memory_mapped_file_linux_t::operator bool() const
 {
 	return m_mapping != s_invalid_mapping;
+}
+
+void mk::read_only_memory_mapped_file_linux_t::reset()
+{
+	*this = read_only_memory_mapped_file_linux_t{};
 }
 
 void const* mk::read_only_memory_mapped_file_linux_t::get_data() const
