@@ -20,7 +20,13 @@
     <ClCompile Include="src\bag2.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\bag_print_file.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\bag_to_pcap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bag_to_pcap_fuzz.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\bag_to_pcap_impl.cpp">
@@ -50,15 +56,15 @@
     <ClCompile Include="src\utils.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\bag_print_file.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bag.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\bag2.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bag_print_file.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\bag_to_pcap.h">
@@ -92,9 +98,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\utils.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\bag_print_file.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
