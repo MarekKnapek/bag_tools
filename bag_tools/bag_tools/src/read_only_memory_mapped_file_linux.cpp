@@ -34,17 +34,26 @@ mk::read_only_memory_mapped_file_linux_t::read_only_memory_mapped_file_linux_t(c
 	read_only_memory_mapped_file_linux_t()
 {
 	int const fd = open(file_path, O_RDONLY, O_CLOEXEC);
-	CHECK_RET_V(fd != s_invalid_fd);
+	if(!(fd != s_invalid_fd))
+	{
+		return;
+	}
 	assert(fd >= 0);
 	m_fd = fd;
 
 	struct stat stat_buff;
 	int const stated = fstat(m_fd, &stat_buff);
-	CHECK_RET_V(stated == 0);
+	if(!(stated == 0))
+	{
+		return;
+	}
 	m_size = static_cast<std::uint64_t>(stat_buff.st_size);
 
 	void* const mapping = mmap(nullptr, m_size, PROT_READ, MAP_PRIVATE, m_fd, 0);
-	CHECK_RET_V(mapping != MAP_FAILED && mapping != s_invalid_mapping);
+	if(!(mapping != MAP_FAILED && mapping != s_invalid_mapping))
+	{
+		return;
+	}
 	m_mapping = mapping;
 }
 

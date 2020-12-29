@@ -24,20 +24,32 @@ mk::read_only_memory_mapped_file_windows_t::read_only_memory_mapped_file_windows
 	read_only_memory_mapped_file_windows_t()
 {
 	HANDLE const file = CreateFileW(file_path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-	CHECK_RET_V(file != INVALID_HANDLE_VALUE);
+	if(!(file != INVALID_HANDLE_VALUE))
+	{
+		return;
+	}
 	m_file = file;
 
 	LARGE_INTEGER size;
 	BOOL const got_size = GetFileSizeEx(file, &size);
-	CHECK_RET_V(got_size != 0);
+	if(!(got_size != 0))
+	{
+		return;
+	}
 	m_size = size.QuadPart;
 
 	HANDLE const mapping = CreateFileMappingW(file, nullptr, PAGE_READONLY, 0, 0, nullptr);
-	CHECK_RET_V(mapping != s_invalid_mapping);
+	if(!(mapping != s_invalid_mapping))
+	{
+		return;
+	}
 	m_mapping = mapping;
 
 	void const* const view = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
-	CHECK_RET_V(view != s_invalid_view);
+	if(!(view != s_invalid_view))
+	{
+		return;
+	}
 	m_view = view;
 }
 
