@@ -17,7 +17,7 @@
     <ClCompile Include="src\bag.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\bag_to_pcap.cpp">
+    <ClCompile Include="src\bag_to_pcap_jumbo.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\data_source_mem.cpp">

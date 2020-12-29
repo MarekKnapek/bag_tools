@@ -25,7 +25,7 @@
   <ItemGroup>
     <ClCompile Include="src\bag.cpp" />
     <ClCompile Include="src\bag_print_file.cpp" />
-    <ClCompile Include="src\bag_to_pcap.cpp">
+    <ClCompile Include="src\bag_to_pcap_jumbo.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
