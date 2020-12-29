@@ -1,6 +1,7 @@
 #include "bag.cpp"
 #include "bag_print_file.cpp"
 #include "data_source_mem.cpp"
+#include "data_source_rommf.cpp"
 #include "main.cpp"
 #include "utils.cpp"
 #include "read_only_memory_mapped_file_linux.cpp"

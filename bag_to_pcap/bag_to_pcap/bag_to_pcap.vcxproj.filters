@@ -23,6 +23,9 @@
     <ClCompile Include="src\data_source_mem.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\data_source_rommf.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -50,6 +53,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\data_source_mem.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\data_source_rommf.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\overload.h">
