@@ -20,6 +20,12 @@
     <ClCompile Include="src\bag2.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\bag_to_pcap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bag_to_pcap_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\bag_to_pcap_jumbo.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -53,6 +59,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\bag2.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bag_to_pcap.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bag_to_pcap_impl.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\cross_platform.h">
