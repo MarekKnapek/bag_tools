@@ -1,4 +1,5 @@
 #include "bag.cpp"
+#include "bag2.cpp"
 #include "bag_print_file.cpp"
 #include "data_source_mem.cpp"
 #include "data_source_rommf.cpp"

@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\bag.cpp" />
+    <ClCompile Include="src\bag2.cpp" />
     <ClCompile Include="src\bag_print_file.cpp" />
     <ClCompile Include="src\bag_to_pcap_jumbo.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -46,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bag.h" />
+    <ClInclude Include="src\bag2.h" />
     <ClInclude Include="src\bag_print_file.h" />
     <ClInclude Include="src\cross_platform.h" />
     <ClInclude Include="src\data_source_mem.h" />
