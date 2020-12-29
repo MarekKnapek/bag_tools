@@ -31,6 +31,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\data_source_mem.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\read_only_memory_mapped_file.cpp" />
     <ClCompile Include="src\read_only_memory_mapped_file_linux.cpp">
@@ -46,6 +47,7 @@
     <ClInclude Include="src\bag.h" />
     <ClInclude Include="src\bag_print_file.h" />
     <ClInclude Include="src\cross_platform.h" />
+    <ClInclude Include="src\data_source_mem.h" />
     <ClInclude Include="src\overload.h" />
     <ClInclude Include="src\read_only_memory_mapped_file.h" />
     <ClInclude Include="src\read_only_memory_mapped_file_linux.h">
