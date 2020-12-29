@@ -21,7 +21,7 @@ namespace mk
 	{
 	public:
 		read_only_memory_mapped_file_t() noexcept;
-		read_only_memory_mapped_file_t(native_char_t const* const& file_path);
+		explicit read_only_memory_mapped_file_t(native_char_t const* const& file_path);
 		read_only_memory_mapped_file_t(read_only_memory_mapped_file_t const&) = delete;
 		read_only_memory_mapped_file_t(read_only_memory_mapped_file_t&& other) noexcept;
 		read_only_memory_mapped_file_t& operator=(read_only_memory_mapped_file_t const&) = delete;

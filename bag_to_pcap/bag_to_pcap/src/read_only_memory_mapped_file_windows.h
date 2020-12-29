@@ -12,7 +12,7 @@ namespace mk
 	{
 	public:
 		read_only_memory_mapped_file_windows_t() noexcept;
-		read_only_memory_mapped_file_windows_t(wchar_t const* const& file_path);
+		explicit read_only_memory_mapped_file_windows_t(wchar_t const* const& file_path);
 		read_only_memory_mapped_file_windows_t(read_only_memory_mapped_file_windows_t const&) = delete;
 		read_only_memory_mapped_file_windows_t(read_only_memory_mapped_file_windows_t&& other) noexcept;
 		read_only_memory_mapped_file_windows_t& operator=(read_only_memory_mapped_file_windows_t const&) = delete;

@@ -12,7 +12,7 @@ namespace mk
 	{
 	public:
 		read_only_memory_mapped_file_linux_t() noexcept;
-		read_only_memory_mapped_file_linux_t(char const* const& file_path);
+		explicit read_only_memory_mapped_file_linux_t(char const* const& file_path);
 		read_only_memory_mapped_file_linux_t(read_only_memory_mapped_file_linux_t const&) = delete;
 		read_only_memory_mapped_file_linux_t(read_only_memory_mapped_file_linux_t&& other) noexcept;
 		read_only_memory_mapped_file_linux_t& operator=(read_only_memory_mapped_file_linux_t const&) = delete;
