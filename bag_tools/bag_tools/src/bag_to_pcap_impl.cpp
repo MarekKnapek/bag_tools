@@ -143,8 +143,10 @@ bool mk::bag_tool::detail::is_topic_ouster_lidar_packets(mk::bag2::record_t cons
 {
 	static constexpr char const s_topic_ouster_0_lidar_packets_name[] = "/os_node/lidar_packets";
 	static constexpr int const s_topic_ouster_0_lidar_packets_name_len = static_cast<int>(std::size(s_topic_ouster_0_lidar_packets_name)) - 1;
-	static constexpr char const s_topic_ouster_1_lidar_packets_name[] = "/os1_node/lidar_packets";
-	static constexpr int const s_topic_ouster_1_lidar_packets_name_len = static_cast<int>(std::size(s_topic_ouster_1_lidar_packets_name)) - 1;
+	static constexpr char const s_topic_ouster_1a_lidar_packets_name[] = "/os1_node/lidar_packets";
+	static constexpr int const s_topic_ouster_1a_lidar_packets_name_len = static_cast<int>(std::size(s_topic_ouster_1a_lidar_packets_name)) - 1;
+	static constexpr char const s_topic_ouster_1b_lidar_packets_name[] = "os1_node/lidar_packets";
+	static constexpr int const s_topic_ouster_1b_lidar_packets_name_len = static_cast<int>(std::size(s_topic_ouster_1b_lidar_packets_name)) - 1;
 
 	assert(out_satisfies);
 	bool& satisfies = *out_satisfies;
@@ -163,8 +165,14 @@ bool mk::bag_tool::detail::is_topic_ouster_lidar_packets(mk::bag2::record_t cons
 		satisfies = true;
 		return true;
 	}
-	bool const is_ouster_1 = connection.m_topic.m_len == s_topic_ouster_1_lidar_packets_name_len && std::memcmp(connection.m_topic.m_begin, s_topic_ouster_1_lidar_packets_name, s_topic_ouster_1_lidar_packets_name_len) == 0;
-	if(is_ouster_1)
+	bool const is_ouster_1a = connection.m_topic.m_len == s_topic_ouster_1a_lidar_packets_name_len && std::memcmp(connection.m_topic.m_begin, s_topic_ouster_1a_lidar_packets_name, s_topic_ouster_1a_lidar_packets_name_len) == 0;
+	if(is_ouster_1a)
+	{
+		satisfies = true;
+		return true;
+	}
+	bool const is_ouster_1b = connection.m_topic.m_len == s_topic_ouster_1b_lidar_packets_name_len && std::memcmp(connection.m_topic.m_begin, s_topic_ouster_1b_lidar_packets_name, s_topic_ouster_1b_lidar_packets_name_len) == 0;
+	if(is_ouster_1b)
 	{
 		satisfies = true;
 		return true;
