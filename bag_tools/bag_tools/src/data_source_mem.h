@@ -30,7 +30,7 @@ namespace mk
 		std::size_t get_view_remaining_size() const;
 	public:
 		void consume(std::size_t const amount);
-		void move_to(std::uint64_t const position, std::size_t const window_size = 2 * 1024 * 1024);
+		void move_to(std::uint64_t const position, std::size_t const window_size);
 	private:
 		void const* m_data;
 		std::size_t m_size;

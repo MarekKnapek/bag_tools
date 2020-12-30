@@ -146,7 +146,7 @@ void mk::data_source_rommf_t::consume(std::size_t const amount)
 	m_position += amount;
 }
 
-void mk::data_source_rommf_t::move_to(std::uint64_t const position, std::size_t const window_size /* = 2 * 1024 * 1024 */)
+void mk::data_source_rommf_t::move_to(std::uint64_t const position, std::size_t const window_size)
 {
 	assert(position < get_input_size());
 	assert(window_size <= detail::s_view_size - detail::s_view_granularity);
