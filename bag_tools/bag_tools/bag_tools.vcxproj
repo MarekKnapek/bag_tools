@@ -24,7 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\bag.cpp" />
-    <ClCompile Include="src\bag2.cpp" />
     <ClCompile Include="src\bag_to_pcap.cpp" />
     <ClCompile Include="src\bag_to_pcap_fuzz.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -56,7 +55,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bag.h" />
-    <ClInclude Include="src\bag2.h" />
     <ClInclude Include="src\bag_to_pcap.h" />
     <ClInclude Include="src\bag_to_pcap_impl.h" />
     <ClInclude Include="src\bag_tool_info.h" />

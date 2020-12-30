@@ -17,9 +17,6 @@
     <ClCompile Include="src\bag.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\bag2.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\bag_to_pcap.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -62,9 +59,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bag.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\bag2.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\bag_to_pcap.h">

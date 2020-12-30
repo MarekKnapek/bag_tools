@@ -1,5 +1,4 @@
 #include "bag.cpp"
-#include "bag2.cpp"
 #include "bag_to_pcap.cpp"
 #include "bag_to_pcap_impl.cpp"
 #include "bag_tool_info.cpp"
