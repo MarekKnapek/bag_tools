@@ -49,32 +49,32 @@ bool mk::bag_tool::detail::bag_info(native_char_t const* const input_bag)
 template<typename data_source_t>
 bool mk::bag_tool::detail::bag_info(data_source_t& data_source)
 {
-	CHECK_RET_F(mk::bag2::is_bag_file(data_source));
-	data_source.consume(mk::bag2::bag_file_header_len());
+	CHECK_RET_F(mk::bag::is_bag_file(data_source));
+	data_source.consume(mk::bag::bag_file_header_len());
 
-	static constexpr auto const s_record_callback = [](void* const ctx, [[maybe_unused]] mk::bag2::callback_variant_e const variant, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, [[maybe_unused]] mk::bag::callback_variant_e const variant, void* const data) -> bool
 	{
 		assert(ctx);
-		assert(variant == mk::bag2::callback_variant_e::record);
+		assert(variant == mk::bag::callback_variant_e::record);
 		assert(data);
 
 		bag_info_t& bag_info = *static_cast<bag_info_t*>(ctx);
-		mk::bag2::record_t const& record = *static_cast<mk::bag2::record_t const*>(data);
+		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
 
 		bool const record_processed = process_record(bag_info, record);
 		CHECK_RET_F(record_processed);
 
 		return true;
 	};
-	mk::bag2::callback_t const callback = s_record_callback;
+	mk::bag::callback_t const callback = s_record_callback;
 
 	bag_info_t bag_info;
-	bool const records_parsed = mk::bag2::parse_records(data_source, callback, &bag_info);
+	bool const records_parsed = mk::bag::parse_records(data_source, callback, &bag_info);
 
 	return true;
 }
 
-bool mk::bag_tool::detail::process_record(bag_info_t& bag_info, mk::bag2::record_t const& record)
+bool mk::bag_tool::detail::process_record(bag_info_t& bag_info, mk::bag::record_t const& record)
 {
 	std::uint32_t const counter = bag_info.m_counter;
 	char const* const type_name = get_record_type_name(record);
@@ -85,12 +85,12 @@ bool mk::bag_tool::detail::process_record(bag_info_t& bag_info, mk::bag2::record
 	(
 		make_overload
 		(
-			[&](mk::bag2::header::bag_t const& header) -> bool { return process_type(bag_info, record, header); },
-			[&](mk::bag2::header::chunk_t const& header) -> bool { return process_type(bag_info, record, header); },
-			[&](mk::bag2::header::connection_t const& header) -> bool { return process_type(bag_info, record, header); },
-			[&](mk::bag2::header::message_data_t const& header) -> bool { return process_type(bag_info, record, header); },
-			[&](mk::bag2::header::index_data_t const& header) -> bool { return process_type(bag_info, record, header); },
-			[&](mk::bag2::header::chunk_info_t const& header) -> bool { return process_type(bag_info, record, header); }
+			[&](mk::bag::header::bag_t const& header) -> bool { return process_type(bag_info, record, header); },
+			[&](mk::bag::header::chunk_t const& header) -> bool { return process_type(bag_info, record, header); },
+			[&](mk::bag::header::connection_t const& header) -> bool { return process_type(bag_info, record, header); },
+			[&](mk::bag::header::message_data_t const& header) -> bool { return process_type(bag_info, record, header); },
+			[&](mk::bag::header::index_data_t const& header) -> bool { return process_type(bag_info, record, header); },
+			[&](mk::bag::header::chunk_info_t const& header) -> bool { return process_type(bag_info, record, header); }
 		),
 		record.m_header
 	);
@@ -103,27 +103,27 @@ bool mk::bag_tool::detail::process_record(bag_info_t& bag_info, mk::bag2::record
 	return true;
 }
 
-char const* mk::bag_tool::detail::get_record_type_name(mk::bag2::record_t const& record)
+char const* mk::bag_tool::detail::get_record_type_name(mk::bag::record_t const& record)
 {
 	char const* const record_type_name = std::visit
 	(
 		make_overload
 		(
-			[](mk::bag2::header::bag_t const&) -> char const* { return "bag"; },
-			[](mk::bag2::header::chunk_t const&) -> char const* { return "chunk"; },
-			[](mk::bag2::header::connection_t const&) -> char const* { return "connection"; },
-			[](mk::bag2::header::message_data_t const&) -> char const* { return "message_data"; },
-			[](mk::bag2::header::index_data_t const&) -> char const* { return "index_data"; },
-			[](mk::bag2::header::chunk_info_t const&) -> char const* { return "chunk_info"; }
+			[](mk::bag::header::bag_t const&) -> char const* { return "bag"; },
+			[](mk::bag::header::chunk_t const&) -> char const* { return "chunk"; },
+			[](mk::bag::header::connection_t const&) -> char const* { return "connection"; },
+			[](mk::bag::header::message_data_t const&) -> char const* { return "message_data"; },
+			[](mk::bag::header::index_data_t const&) -> char const* { return "index_data"; },
+			[](mk::bag::header::chunk_info_t const&) -> char const* { return "chunk_info"; }
 		),
 		record.m_header
 	);
 	return record_type_name;
 }
 
-bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::bag_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag::record_t const& record, mk::bag::header::bag_t const& /* tag */)
 {
-	mk::bag2::header::bag_t const& header = std::get<mk::bag2::header::bag_t>(record.m_header);
+	mk::bag::header::bag_t const& header = std::get<mk::bag::header::bag_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter == 0);
 
 	bag_info.m_bag_hdr = header;
@@ -139,9 +139,9 @@ bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t
 	return true;
 }
 
-bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::chunk_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag::record_t const& record, mk::bag::header::chunk_t const& /* tag */)
 {
-	mk::bag2::header::chunk_t const& header = std::get<mk::bag2::header::chunk_t>(record.m_header);
+	mk::bag::header::chunk_t const& header = std::get<mk::bag::header::chunk_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
 
 	std::printf
@@ -155,9 +155,9 @@ bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t
 	return true;
 }
 
-bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::connection_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag::record_t const& record, mk::bag::header::connection_t const& /* tag */)
 {
-	mk::bag2::header::connection_t const& header = std::get<mk::bag2::header::connection_t>(record.m_header);
+	mk::bag::header::connection_t const& header = std::get<mk::bag::header::connection_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
 
 	std::printf
@@ -171,9 +171,9 @@ bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t
 	return true;
 }
 
-bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::message_data_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag::record_t const& record, mk::bag::header::message_data_t const& /* tag */)
 {
-	mk::bag2::header::message_data_t const& header = std::get<mk::bag2::header::message_data_t>(record.m_header);
+	mk::bag::header::message_data_t const& header = std::get<mk::bag::header::message_data_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
 
 	std::printf
@@ -186,9 +186,9 @@ bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t
 	return true;
 }
 
-bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::index_data_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag::record_t const& record, mk::bag::header::index_data_t const& /* tag */)
 {
-	mk::bag2::header::index_data_t const& header = std::get<mk::bag2::header::index_data_t>(record.m_header);
+	mk::bag::header::index_data_t const& header = std::get<mk::bag::header::index_data_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
 
 	std::printf
@@ -202,9 +202,9 @@ bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t
 	return true;
 }
 
-bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::chunk_info_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag::record_t const& record, mk::bag::header::chunk_info_t const& /* tag */)
 {
-	mk::bag2::header::chunk_info_t const& header = std::get<mk::bag2::header::chunk_info_t>(record.m_header);
+	mk::bag::header::chunk_info_t const& header = std::get<mk::bag::header::chunk_info_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
 
 	std::printf

@@ -10,7 +10,7 @@
 
 namespace mk
 {
-	namespace bag2
+	namespace bag
 	{
 
 

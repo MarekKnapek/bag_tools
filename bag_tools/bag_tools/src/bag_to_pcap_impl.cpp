@@ -50,8 +50,8 @@ bool mk::bag_tool::detail::bag_to_pcap(native_char_t const* const input_bag, nat
 template<typename data_source_t>
 bool mk::bag_tool::detail::bag_to_pcap(data_source_t& data_source, native_char_t const* const output_pcap)
 {
-	CHECK_RET_F(mk::bag2::is_bag_file(data_source));
-	data_source.consume(mk::bag2::bag_file_header_len());
+	CHECK_RET_F(mk::bag::is_bag_file(data_source));
+	data_source.consume(mk::bag::bag_file_header_len());
 
 	std::uint32_t ouster_channel;
 	bool const got_ouster_channel = get_ouster_channel(data_source, &ouster_channel);
@@ -81,8 +81,8 @@ bool mk::bag_tool::detail::bag_to_pcap(data_source_t& data_source, native_char_t
 	pcap_hdr.network = 1;
 	g_ofs.write(reinterpret_cast<char const*>(&pcap_hdr), sizeof(pcap_hdr));
 
-	data_source.move_to(0, mk::bag2::bag_file_header_len());
-	data_source.consume(mk::bag2::bag_file_header_len());
+	data_source.move_to(0, mk::bag::bag_file_header_len());
+	data_source.consume(mk::bag::bag_file_header_len());
 	bool const ouster_records_processed = process_ouster_records(data_source, ouster_channel);
 	CHECK_RET_F(ouster_records_processed);
 
@@ -97,21 +97,21 @@ bool mk::bag_tool::detail::get_ouster_channel(data_source_t& data_source, std::u
 	assert(out_ouster_channel);
 	std::uint32_t& ouster_channel = *out_ouster_channel;
 
-	static constexpr auto const s_record_callback = [](void* const ctx, mk::bag2::callback_variant_e const variant, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, mk::bag::callback_variant_e const variant, void* const data) -> bool
 	{
 		std::optional<std::uint32_t>& ouster_channel_opt = *static_cast<std::optional<std::uint32_t>*>(ctx);
-		CHECK_RET_F(variant == mk::bag2::callback_variant_e::record);
-		mk::bag2::record_t const& record = *static_cast<mk::bag2::record_t const*>(data);
+		CHECK_RET_F(variant == mk::bag::callback_variant_e::record);
+		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
 
 		bool const processed = get_ouster_channel_record(record, &ouster_channel_opt);
 		CHECK_RET_F(processed);
 
 		return true;
 	};
-	mk::bag2::callback_t const callback = s_record_callback;
+	mk::bag::callback_t const callback = s_record_callback;
 
 	std::optional<std::uint32_t> ouster_channel_opt = std::nullopt;
-	bool const file_parsed = mk::bag2::parse_records(data_source, callback, &ouster_channel_opt);
+	bool const file_parsed = mk::bag::parse_records(data_source, callback, &ouster_channel_opt);
 	CHECK_RET_F(file_parsed);
 
 	CHECK_RET_F(ouster_channel_opt.has_value());
@@ -120,7 +120,7 @@ bool mk::bag_tool::detail::get_ouster_channel(data_source_t& data_source, std::u
 	return true;
 }
 
-bool mk::bag_tool::detail::get_ouster_channel_record(mk::bag2::record_t const& record, std::optional<std::uint32_t>* const out_ouster_channel_opt)
+bool mk::bag_tool::detail::get_ouster_channel_record(mk::bag::record_t const& record, std::optional<std::uint32_t>* const out_ouster_channel_opt)
 {
 	assert(out_ouster_channel_opt);
 	std::optional<std::uint32_t>& ouster_channel_opt = *out_ouster_channel_opt;
@@ -134,12 +134,12 @@ bool mk::bag_tool::detail::get_ouster_channel_record(mk::bag2::record_t const& r
 	}
 
 	CHECK_RET_F(!ouster_channel_opt.has_value());
-	ouster_channel_opt = std::get<mk::bag2::header::connection_t>(record.m_header).m_conn;
+	ouster_channel_opt = std::get<mk::bag::header::connection_t>(record.m_header).m_conn;
 
 	return true;
 }
 
-bool mk::bag_tool::detail::is_topic_ouster_lidar_packets(mk::bag2::record_t const& record, bool* const out_satisfies)
+bool mk::bag_tool::detail::is_topic_ouster_lidar_packets(mk::bag::record_t const& record, bool* const out_satisfies)
 {
 	static constexpr char const s_topic_ouster_0_lidar_packets_name[] = "/os_node/lidar_packets";
 	static constexpr int const s_topic_ouster_0_lidar_packets_name_len = static_cast<int>(std::size(s_topic_ouster_0_lidar_packets_name)) - 1;
@@ -151,13 +151,13 @@ bool mk::bag_tool::detail::is_topic_ouster_lidar_packets(mk::bag2::record_t cons
 	assert(out_satisfies);
 	bool& satisfies = *out_satisfies;
 
-	bool const is_connection = std::visit(mk::make_overload([](mk::bag2::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+	bool const is_connection = std::visit(mk::make_overload([](mk::bag::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
 	if(!is_connection)
 	{
 		satisfies = false;
 		return true;
 	}
-	mk::bag2::header::connection_t const& connection = std::get<mk::bag2::header::connection_t>(record.m_header);
+	mk::bag::header::connection_t const& connection = std::get<mk::bag::header::connection_t>(record.m_header);
 
 	bool const is_ouster_0 = connection.m_topic.m_len == s_topic_ouster_0_lidar_packets_name_len && std::memcmp(connection.m_topic.m_begin, s_topic_ouster_0_lidar_packets_name, s_topic_ouster_0_lidar_packets_name_len) == 0;
 	if(is_ouster_0)
@@ -191,62 +191,62 @@ bool mk::bag_tool::detail::process_ouster_records(data_source_t& data_source, st
 		std::vector<unsigned char> m_helper_buffer;
 	};
 
-	static constexpr auto const s_record_callback = [](void* const ctx, mk::bag2::callback_variant_e const variant, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, mk::bag::callback_variant_e const variant, void* const data) -> bool
 	{
 		helper_struct_t& helper = *static_cast<helper_struct_t*>(ctx);
-		CHECK_RET_F(variant == mk::bag2::callback_variant_e::record);
-		mk::bag2::record_t const& record = *static_cast<mk::bag2::record_t const*>(data);
+		CHECK_RET_F(variant == mk::bag::callback_variant_e::record);
+		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
 
 		bool const processed = process_record_ouster_chunk(record, helper.m_ouster_channel, helper.m_helper_buffer);
 		CHECK_RET_F(processed);
 
 		return true;
 	};
-	mk::bag2::callback_t const callback = s_record_callback;
+	mk::bag::callback_t const callback = s_record_callback;
 
 	helper_struct_t helper;
 	helper.m_ouster_channel = ouster_channel;
-	bool const parsed = mk::bag2::parse_records(data_source, callback, &helper);
+	bool const parsed = mk::bag::parse_records(data_source, callback, &helper);
 	CHECK_RET_F(parsed);
 
 	return true;
 }
 
-bool mk::bag_tool::detail::process_record_ouster_chunk(mk::bag2::record_t const& record, std::uint32_t const ouster_channel, std::vector<unsigned char>& helper_buffer)
+bool mk::bag_tool::detail::process_record_ouster_chunk(mk::bag::record_t const& record, std::uint32_t const ouster_channel, std::vector<unsigned char>& helper_buffer)
 {
-	bool const is_chunk = std::visit(mk::make_overload([](mk::bag2::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+	bool const is_chunk = std::visit(mk::make_overload([](mk::bag::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
 	if(!is_chunk)
 	{
 		return true;
 	}
-	mk::bag2::header::chunk_t const& chunk = std::get<mk::bag2::header::chunk_t>(record.m_header);
+	mk::bag::header::chunk_t const& chunk = std::get<mk::bag::header::chunk_t>(record.m_header);
 
 	void const* decompressed_data;
 	bool const decompressed = decompress_record_chunk_data(record, helper_buffer, &decompressed_data);
 	CHECK_RET_F(decompressed);
 
-	static constexpr auto const s_record_callback = [](void* const ctx, mk::bag2::callback_variant_e const variant, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, mk::bag::callback_variant_e const variant, void* const data) -> bool
 	{
 		std::uint32_t const& ouster_channel = *static_cast<std::uint32_t const*>(ctx);
-		CHECK_RET_F(variant == mk::bag2::callback_variant_e::record);
-		mk::bag2::record_t const& record = *static_cast<mk::bag2::record_t const*>(data);
+		CHECK_RET_F(variant == mk::bag::callback_variant_e::record);
+		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
 
 		bool const processed = process_inner_ouster_record(record, ouster_channel);
 		CHECK_RET_F(processed);
 
 		return true;
 	};
-	mk::bag2::callback_t const callback = s_record_callback;
+	mk::bag::callback_t const callback = s_record_callback;
 
 	std::uint32_t ouster_channel_ = ouster_channel;
 	mk::data_source_mem_t data_source = mk::data_source_mem_t::make(decompressed_data, chunk.m_size);
-	bool const parsed = mk::bag2::parse_records(data_source, callback, &ouster_channel_);
+	bool const parsed = mk::bag::parse_records(data_source, callback, &ouster_channel_);
 	CHECK_RET_F(parsed);
 
 	return true;
 }
 
-bool mk::bag_tool::detail::decompress_record_chunk_data(mk::bag2::record_t const& record, std::vector<unsigned char>& helper_buffer, void const** out_decompressed_data)
+bool mk::bag_tool::detail::decompress_record_chunk_data(mk::bag::record_t const& record, std::vector<unsigned char>& helper_buffer, void const** out_decompressed_data)
 {
 	static constexpr char const s_compression_none_name[] = "none";
 	static constexpr int const s_compression_none_name_len = static_cast<int>(std::size(s_compression_none_name)) - 1;
@@ -254,9 +254,9 @@ bool mk::bag_tool::detail::decompress_record_chunk_data(mk::bag2::record_t const
 	static constexpr int const s_compression_lz4_name_len = static_cast<int>(std::size(s_compression_lz4_name)) - 1;
 
 	assert(out_decompressed_data);
-	assert(std::visit(mk::make_overload([](mk::bag2::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header));
+	assert(std::visit(mk::make_overload([](mk::bag::header::chunk_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header));
 
-	mk::bag2::header::chunk_t const& chunk = std::get<mk::bag2::header::chunk_t>(record.m_header);
+	mk::bag::header::chunk_t const& chunk = std::get<mk::bag::header::chunk_t>(record.m_header);
 
 	bool const is_none = chunk.m_compression.m_len == s_compression_none_name_len && std::memcmp(chunk.m_compression.m_begin, s_compression_none_name, s_compression_none_name_len) == 0;
 	if(is_none)
@@ -296,7 +296,7 @@ bool mk::bag_tool::detail::decompress_lz4(void const* const input, int const inp
 	return true;
 }
 
-bool mk::bag_tool::detail::process_inner_ouster_record(mk::bag2::record_t const& record, std::uint32_t const ouster_channel)
+bool mk::bag_tool::detail::process_inner_ouster_record(mk::bag::record_t const& record, std::uint32_t const ouster_channel)
 {
 	static constexpr int const s_udp_header_len = 8;
 	static constexpr int const s_ip_header_len = 28;
@@ -306,12 +306,12 @@ bool mk::bag_tool::detail::process_inner_ouster_record(mk::bag2::record_t const&
 	static constexpr int const s_bag_payload_len = 12613;
 	static constexpr std::uint16_t const s_destination_port_number = 7502;
 
-	bool const is_message_data = std::visit(mk::make_overload([](mk::bag2::header::message_data_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+	bool const is_message_data = std::visit(mk::make_overload([](mk::bag::header::message_data_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
 	if(!is_message_data)
 	{
 		return true;
 	}
-	mk::bag2::header::message_data_t const& message_data = std::get<mk::bag2::header::message_data_t>(record.m_header);
+	mk::bag::header::message_data_t const& message_data = std::get<mk::bag::header::message_data_t>(record.m_header);
 	bool const is_my_connection = message_data.m_conn == ouster_channel;
 	if(!is_my_connection)
 	{

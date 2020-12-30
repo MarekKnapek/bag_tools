@@ -14,7 +14,7 @@
 
 namespace mk
 {
-	namespace bag2
+	namespace bag
 	{
 		namespace detail
 		{
@@ -53,7 +53,7 @@ namespace mk
 
 
 template<typename t>
-t mk::bag2::detail::read(unsigned char const* const& data, std::uint64_t const& len, std::uint64_t& idx)
+t mk::bag::detail::read(unsigned char const* const& data, std::uint64_t const& len, std::uint64_t& idx)
 {
 	t val;
 	assert(len - idx >= sizeof(val)); (void)len;
@@ -63,7 +63,7 @@ t mk::bag2::detail::read(unsigned char const* const& data, std::uint64_t const& 
 }
 
 template<typename t, typename data_source_t>
-t mk::bag2::detail::read(data_source_t& data_source)
+t mk::bag::detail::read(data_source_t& data_source)
 {
 	t val;
 	assert(data_source.get_view_remaining_size() >= sizeof(val));
@@ -73,7 +73,7 @@ t mk::bag2::detail::read(data_source_t& data_source)
 }
 
 template<typename data_source_t>
-bool mk::bag2::detail::parse_field(data_source_t& data_source, field_t* const out_field)
+bool mk::bag::detail::parse_field(data_source_t& data_source, field_t* const out_field)
 {
 	static constexpr int const s_min_field_len = 3;
 	static constexpr int const s_max_field_len = 1 * 1024 * 1024;
@@ -111,7 +111,7 @@ bool mk::bag2::detail::parse_field(data_source_t& data_source, field_t* const ou
 	return true;
 }
 
-bool mk::bag2::detail::parse_field_descr(field_t const* const& fields, int const& fields_count, field_descr_t const& field_descr, void* const& target, bool* const& out_found)
+bool mk::bag::detail::parse_field_descr(field_t const* const& fields, int const& fields_count, field_descr_t const& field_descr, void* const& target, bool* const& out_found)
 {
 	assert(out_found);
 	bool& found = *out_found;
@@ -171,7 +171,7 @@ bool mk::bag2::detail::parse_field_descr(field_t const* const& fields, int const
 	return true;
 }
 
-bool mk::bag2::detail::parse_field_descrs(field_t const* const& fields, int const& fields_count, field_descr_t const* const& field_descrs, int const& field_descrs_count, void* const* const& targets, bool* const& out_founds)
+bool mk::bag::detail::parse_field_descrs(field_t const* const& fields, int const& fields_count, field_descr_t const* const& field_descrs, int const& field_descrs_count, void* const* const& targets, bool* const& out_founds)
 {
 	for(int i = 0; i != field_descrs_count; ++i)
 	{
@@ -181,7 +181,7 @@ bool mk::bag2::detail::parse_field_descrs(field_t const* const& fields, int cons
 	return true;
 }
 
-bool mk::bag2::detail::parse_bag(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_bag(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr char const s_field_0_name[] = "index_pos";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -214,7 +214,7 @@ bool mk::bag2::detail::parse_bag(field_t const* const& fields, int const& fields
 	return true;
 }
 
-bool mk::bag2::detail::parse_chunk(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_chunk(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr char const s_field_0_name[] = "compression";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -244,7 +244,7 @@ bool mk::bag2::detail::parse_chunk(field_t const* const& fields, int const& fiel
 	return true;
 }
 
-bool mk::bag2::detail::parse_connection(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_connection(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr char const s_field_0_name[] = "conn";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -274,7 +274,7 @@ bool mk::bag2::detail::parse_connection(field_t const* const& fields, int const&
 	return true;
 }
 
-bool mk::bag2::detail::parse_message_data(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_message_data(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr char const s_field_0_name[] = "conn";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -304,7 +304,7 @@ bool mk::bag2::detail::parse_message_data(field_t const* const& fields, int cons
 	return true;
 }
 
-bool mk::bag2::detail::parse_index_data(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_index_data(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr char const s_field_0_name[] = "ver";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -337,7 +337,7 @@ bool mk::bag2::detail::parse_index_data(field_t const* const& fields, int const&
 	return true;
 }
 
-bool mk::bag2::detail::parse_chunk_info(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_chunk_info(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr char const s_field_0_name[] = "ver";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -376,7 +376,7 @@ bool mk::bag2::detail::parse_chunk_info(field_t const* const& fields, int const&
 	return true;
 }
 
-bool mk::bag2::detail::parse_header(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
+bool mk::bag::detail::parse_header(field_t const* const& fields, int const& fields_count, header::header_t* const& out_header)
 {
 	static constexpr int const s_min_fields_count = 2;
 	static constexpr auto const s_find_op = [](field_t const& field) -> bool
@@ -446,7 +446,7 @@ bool mk::bag2::detail::parse_header(field_t const* const& fields, int const& fie
 }
 
 template<typename data_source_t>
-bool mk::bag2::detail::parse_record(data_source_t& data_source, record_t* const out_record)
+bool mk::bag::detail::parse_record(data_source_t& data_source, record_t* const out_record)
 {
 	struct fields_callback_ctx_t
 	{
@@ -525,13 +525,13 @@ bool mk::bag2::detail::parse_record(data_source_t& data_source, record_t* const 
 }
 
 
-int mk::bag2::bag_file_header_len()
+int mk::bag::bag_file_header_len()
 {
 	return detail::s_bag_magic_len;
 }
 
 template<typename data_source_t>
-bool mk::bag2::is_bag_file(data_source_t& data_source)
+bool mk::bag::is_bag_file(data_source_t& data_source)
 {
 	data_source.move_to(0, bag_file_header_len());
 	if(!(data_source.get_view_remaining_size() >= detail::s_bag_magic_len))
@@ -545,18 +545,18 @@ bool mk::bag2::is_bag_file(data_source_t& data_source)
 	return true;
 }
 
-void const* mk::bag2::adjust_data(void const* const& void_data)
+void const* mk::bag::adjust_data(void const* const& void_data)
 {
 	return static_cast<unsigned char const*>(void_data) + detail::s_bag_magic_len;
 }
 
-std::uint64_t mk::bag2::adjust_len(std::uint64_t const& len)
+std::uint64_t mk::bag::adjust_len(std::uint64_t const& len)
 {
 	return len - detail::s_bag_magic_len;
 }
 
 template<typename data_source_t>
-bool mk::bag2::parse_records(data_source_t& data_source, callback_t const callback, void* const callback_ctx)
+bool mk::bag::parse_records(data_source_t& data_source, callback_t const callback, void* const callback_ctx)
 {
 	assert(callback);
 	std::uint64_t const end_position = data_source.get_input_size();
@@ -572,7 +572,7 @@ bool mk::bag2::parse_records(data_source_t& data_source, callback_t const callba
 }
 
 template<typename data_source_t>
-bool mk::bag2::parse_fields(data_source_t& data_source, callback_t const callback, void* const callback_ctx)
+bool mk::bag::parse_fields(data_source_t& data_source, callback_t const callback, void* const callback_ctx)
 {
 	assert(callback);
 	std::uint64_t const data_end = data_source.get_input_size();
@@ -588,7 +588,7 @@ bool mk::bag2::parse_fields(data_source_t& data_source, callback_t const callbac
 	return true;
 }
 
-bool mk::bag2::parse_connection_data(field_t const* const& fields, int const& fields_count, data::connection_data_t* const& out_connection_data)
+bool mk::bag::parse_connection_data(field_t const* const& fields, int const& fields_count, data::connection_data_t* const& out_connection_data)
 {
 	static constexpr char const s_field_0_name[] = "callerid";
 	static constexpr int const s_field_0_name_len = static_cast<int>(std::size(s_field_0_name)) - 1;
@@ -670,10 +670,10 @@ bool mk::bag2::parse_connection_data(field_t const* const& fields, int const& fi
 #include "data_source_mem.h"
 #include "data_source_rommf.h"
 
-template bool mk::bag2::is_bag_file<mk::data_source_mem_t>(mk::data_source_mem_t&);
-template bool mk::bag2::parse_records<mk::data_source_mem_t>(mk::data_source_mem_t& data_source, callback_t const callback, void* const callback_ctx);
-template bool mk::bag2::parse_fields<mk::data_source_mem_t>(mk::data_source_mem_t& data_source, callback_t const callback, void* const callback_ctx);
+template bool mk::bag::is_bag_file<mk::data_source_mem_t>(mk::data_source_mem_t&);
+template bool mk::bag::parse_records<mk::data_source_mem_t>(mk::data_source_mem_t& data_source, callback_t const callback, void* const callback_ctx);
+template bool mk::bag::parse_fields<mk::data_source_mem_t>(mk::data_source_mem_t& data_source, callback_t const callback, void* const callback_ctx);
 
-template bool mk::bag2::is_bag_file<mk::data_source_rommf_t>(mk::data_source_rommf_t&);
-template bool mk::bag2::parse_records<mk::data_source_rommf_t>(mk::data_source_rommf_t& data_source, callback_t const callback, void* const callback_ctx);
-template bool mk::bag2::parse_fields<mk::data_source_rommf_t>(mk::data_source_rommf_t& data_source, callback_t const callback, void* const callback_ctx);
+template bool mk::bag::is_bag_file<mk::data_source_rommf_t>(mk::data_source_rommf_t&);
+template bool mk::bag::parse_records<mk::data_source_rommf_t>(mk::data_source_rommf_t& data_source, callback_t const callback, void* const callback_ctx);
+template bool mk::bag::parse_fields<mk::data_source_rommf_t>(mk::data_source_rommf_t& data_source, callback_t const callback, void* const callback_ctx);
