@@ -18,9 +18,10 @@ extern "C" int LLVMFuzzerTestOneInput(std::uint8_t const* const data, std::size_
 
 #include "bag.cpp"
 #include "bag2.cpp"
-#include "bag_print_file.cpp"
 #include "bag_to_pcap.cpp"
 #include "bag_to_pcap_impl.cpp"
+#include "bag_tool_info.cpp"
+#include "bag_tool_info_impl.cpp"
 #include "data_source_mem.cpp"
 #include "data_source_rommf.cpp"
 #include "read_only_memory_mapped_file.cpp"
