@@ -10,14 +10,15 @@
 
 namespace mk
 {
-	namespace bag_tools
+	namespace bag_tool
 	{
 		namespace detail
 		{
 
 
-			bool bag_to_pcap(native_char_t const* const input_bag, native_char_t const* const output_pcap);
+			bool bag_to_pcap(int const argc, native_char_t const* const* const argv);
 
+			bool bag_to_pcap(native_char_t const* const input_bag, native_char_t const* const output_pcap);
 			template<typename data_source_t>
 			bool bag_to_pcap(data_source_t& data_source, native_char_t const* const output_pcap);
 			template<typename data_source_t>

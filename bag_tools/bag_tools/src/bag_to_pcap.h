@@ -6,10 +6,10 @@
 
 namespace mk
 {
-	namespace bag_tools
+	namespace bag_tool
 	{
 
-		bool bag_to_pcap(native_char_t const* const input_bag, native_char_t const* const output_pcap);
+		bool bag_to_pcap(int const argc, native_char_t const* const* const argv);
 
 	}
 }

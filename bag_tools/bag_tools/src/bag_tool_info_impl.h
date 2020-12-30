@@ -7,7 +7,7 @@
 
 namespace mk
 {
-	namespace bag_tools
+	namespace bag_tool
 	{
 		namespace detail
 		{
@@ -23,8 +23,9 @@ namespace mk
 			};
 
 
-			bool bag_info(native_char_t const* const input_bag);
+			bool bag_info(int const argc, native_char_t const* const* const argv);
 
+			bool bag_info(native_char_t const* const input_bag);
 			template<typename data_source_t> bool bag_info(data_source_t& data_source);
 			bool process_record(bag_info_t& bag_info, mk::bag2::record_t const& record);
 			char const* get_record_type_name(mk::bag2::record_t const& record);

@@ -11,14 +11,21 @@
 #include <cstdio>
 
 
-mk::bag_tools::detail::bag_info_t::bag_info_t() :
+mk::bag_tool::detail::bag_info_t::bag_info_t() :
 	m_counter(),
 	m_bag_hdr()
 {
 }
 
 
-bool mk::bag_tools::detail::bag_info(native_char_t const* const input_bag)
+bool mk::bag_tool::detail::bag_info(int const argc, native_char_t const* const* const argv)
+{
+	CHECK_RET_F(argc == 3);
+	return bag_info(argv[2]);
+}
+
+
+bool mk::bag_tool::detail::bag_info(native_char_t const* const input_bag)
 {
 	mk::read_only_memory_mapped_file_t const rommf{input_bag};
 	if(rommf)
@@ -39,9 +46,8 @@ bool mk::bag_tools::detail::bag_info(native_char_t const* const input_bag)
 	}
 }
 
-
 template<typename data_source_t>
-bool mk::bag_tools::detail::bag_info(data_source_t& data_source)
+bool mk::bag_tool::detail::bag_info(data_source_t& data_source)
 {
 	CHECK_RET_F(mk::bag2::is_bag_file(data_source));
 	data_source.consume(mk::bag2::bag_file_header_len());
@@ -68,7 +74,7 @@ bool mk::bag_tools::detail::bag_info(data_source_t& data_source)
 	return true;
 }
 
-bool mk::bag_tools::detail::process_record(bag_info_t& bag_info, mk::bag2::record_t const& record)
+bool mk::bag_tool::detail::process_record(bag_info_t& bag_info, mk::bag2::record_t const& record)
 {
 	std::uint32_t const counter = bag_info.m_counter;
 	char const* const type_name = get_record_type_name(record);
@@ -97,7 +103,7 @@ bool mk::bag_tools::detail::process_record(bag_info_t& bag_info, mk::bag2::recor
 	return true;
 }
 
-char const* mk::bag_tools::detail::get_record_type_name(mk::bag2::record_t const& record)
+char const* mk::bag_tool::detail::get_record_type_name(mk::bag2::record_t const& record)
 {
 	char const* const record_type_name = std::visit
 	(
@@ -115,7 +121,7 @@ char const* mk::bag_tools::detail::get_record_type_name(mk::bag2::record_t const
 	return record_type_name;
 }
 
-bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::bag_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::bag_t const& /* tag */)
 {
 	mk::bag2::header::bag_t const& header = std::get<mk::bag2::header::bag_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter == 0);
@@ -133,7 +139,7 @@ bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_
 	return true;
 }
 
-bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::chunk_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::chunk_t const& /* tag */)
 {
 	mk::bag2::header::chunk_t const& header = std::get<mk::bag2::header::chunk_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
@@ -149,7 +155,7 @@ bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_
 	return true;
 }
 
-bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::connection_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::connection_t const& /* tag */)
 {
 	mk::bag2::header::connection_t const& header = std::get<mk::bag2::header::connection_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
@@ -165,7 +171,7 @@ bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_
 	return true;
 }
 
-bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::message_data_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::message_data_t const& /* tag */)
 {
 	mk::bag2::header::message_data_t const& header = std::get<mk::bag2::header::message_data_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
@@ -180,7 +186,7 @@ bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_
 	return true;
 }
 
-bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::index_data_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::index_data_t const& /* tag */)
 {
 	mk::bag2::header::index_data_t const& header = std::get<mk::bag2::header::index_data_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);
@@ -196,7 +202,7 @@ bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_
 	return true;
 }
 
-bool mk::bag_tools::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::chunk_info_t const& /* tag */)
+bool mk::bag_tool::detail::process_type(bag_info_t& bag_info, mk::bag2::record_t const& record, mk::bag2::header::chunk_info_t const& /* tag */)
 {
 	mk::bag2::header::chunk_info_t const& header = std::get<mk::bag2::header::chunk_info_t>(record.m_header);
 	CHECK_RET_F(bag_info.m_counter != 0);

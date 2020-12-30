@@ -3,7 +3,7 @@
 #include "bag_tool_info_impl.h"
 
 
-bool mk::bag_tools::bag_info(native_char_t const* const input_bag)
+bool mk::bag_tool::bag_info(int const argc, native_char_t const* const* const argv)
 {
-	return mk::bag_tools::detail::bag_info(input_bag);
+	return mk::bag_tool::detail::bag_info(argc, argv);
 }

@@ -6,10 +6,10 @@
 
 namespace mk
 {
-	namespace bag_tools
+	namespace bag_tool
 	{
 
-		bool bag_info(native_char_t const* const input_bag);
+		bool bag_info(int const argc, native_char_t const* const* const argv);
 
 	}
 }
