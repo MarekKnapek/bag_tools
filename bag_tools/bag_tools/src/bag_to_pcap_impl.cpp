@@ -119,6 +119,37 @@ bool mk::bag_tool::detail::get_ouster_channel(data_source_t& data_source, std::u
 	return true;
 }
 
+template<typename data_source_t>
+bool mk::bag_tool::detail::get_connections_offset(data_source_t& data_source, std::uint64_t* const out_connections_offset)
+{
+	assert(out_connections_offset);
+	std::uint64_t& connections_offset = *out_connections_offset;
+
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, bool& keep_iterating) -> bool
+	{
+		assert(ctx);
+		assert(data);
+
+		std::uint64_t& connections_offset = *static_cast<std::uint64_t*>(ctx);
+		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
+
+		bool const is_bag = std::visit(mk::make_overload([](mk::bag::header::bag_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+		CHECK_RET_F(is_bag);
+		mk::bag::header::bag_t const& bag = std::get<mk::bag::header::bag_t>(record.m_header);
+
+		connections_offset = bag.m_index_pos;
+		keep_iterating = false;
+
+		return true;
+	};
+	mk::bag::callback_t const callback = s_record_callback;
+
+	bool const file_parsed = mk::bag::parse_records(data_source, callback, &connections_offset);
+	CHECK_RET_F(file_parsed);
+
+	return true;
+}
+
 bool mk::bag_tool::detail::get_ouster_channel_record(mk::bag::record_t const& record, std::optional<std::uint32_t>* const out_ouster_channel_opt)
 {
 	assert(out_ouster_channel_opt);

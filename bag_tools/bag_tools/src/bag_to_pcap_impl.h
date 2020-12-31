@@ -23,6 +23,8 @@ namespace mk
 			bool bag_to_pcap(data_source_t& data_source, native_char_t const* const output_pcap);
 			template<typename data_source_t>
 			bool get_ouster_channel(data_source_t& data_source, std::uint32_t* const out_ouster_channel);
+			template<typename data_source_t>
+			bool get_connections_offset(data_source_t& data_source, std::uint64_t* const out_connections_offset);
 			bool get_ouster_channel_record(mk::bag::record_t const& record, std::optional<std::uint32_t>* const out_ouster_channel_opt);
 			bool is_topic_ouster_lidar_packets(mk::bag::record_t const& record, bool* const out_satisfies);
 			template<typename data_source_t>
