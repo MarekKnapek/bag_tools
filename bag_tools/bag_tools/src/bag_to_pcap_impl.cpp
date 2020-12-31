@@ -97,13 +97,31 @@ bool mk::bag_tool::detail::get_ouster_channel(data_source_t& data_source, std::u
 	assert(out_ouster_channel);
 	std::uint32_t& ouster_channel = *out_ouster_channel;
 
-	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, [[maybe_unused]] bool& keep_iterating) -> bool
+	std::uint64_t connections_offset;
+	bool const got_connections_offset = get_connections_offset(data_source, &connections_offset);
+	CHECK_RET_F(got_connections_offset);
+	CHECK_RET_F(connections_offset < data_source.get_input_size());
+	data_source.move_to(connections_offset, 1);
+
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, bool& keep_iterating) -> bool
 	{
 		std::optional<std::uint32_t>& ouster_channel_opt = *static_cast<std::optional<std::uint32_t>*>(ctx);
 		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
 
+		bool const is_connection = std::visit(mk::make_overload([](mk::bag::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
+		if(!is_connection)
+		{
+			keep_iterating = false;
+			return true;
+		}
+
 		bool const processed = get_ouster_channel_record(record, &ouster_channel_opt);
 		CHECK_RET_F(processed);
+		if(ouster_channel_opt.has_value())
+		{
+			keep_iterating = false;
+			return true;
+		}
 
 		return true;
 	};
@@ -181,12 +199,7 @@ bool mk::bag_tool::detail::is_topic_ouster_lidar_packets(mk::bag::record_t const
 	assert(out_satisfies);
 	bool& satisfies = *out_satisfies;
 
-	bool const is_connection = std::visit(mk::make_overload([](mk::bag::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header);
-	if(!is_connection)
-	{
-		satisfies = false;
-		return true;
-	}
+	assert(std::visit(mk::make_overload([](mk::bag::header::connection_t const&) -> bool { return true; }, [](...) -> bool { return false; }), record.m_header));
 	mk::bag::header::connection_t const& connection = std::get<mk::bag::header::connection_t>(record.m_header);
 
 	bool const is_ouster_0 = connection.m_topic.m_len == s_topic_ouster_0_lidar_packets_name_len && std::memcmp(connection.m_topic.m_begin, s_topic_ouster_0_lidar_packets_name, s_topic_ouster_0_lidar_packets_name_len) == 0;
