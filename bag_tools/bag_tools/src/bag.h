@@ -134,7 +134,7 @@ namespace mk
 		};
 
 
-		typedef bool(*callback_t)(void* const ctx, void* const data);
+		typedef bool(*callback_t)(void* const ctx, void* const data, bool& keep_iterating);
 
 
 		int bag_file_header_len();

@@ -52,7 +52,7 @@ bool mk::bag_tool::detail::bag_info(data_source_t& data_source)
 	CHECK_RET_F(mk::bag::is_bag_file(data_source));
 	data_source.consume(mk::bag::bag_file_header_len());
 
-	static constexpr auto const s_record_callback = [](void* const ctx, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, [[maybe_unused]] bool& keep_iterating) -> bool
 	{
 		assert(ctx);
 		assert(data);

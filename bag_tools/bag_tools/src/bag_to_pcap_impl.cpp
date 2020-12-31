@@ -97,7 +97,7 @@ bool mk::bag_tool::detail::get_ouster_channel(data_source_t& data_source, std::u
 	assert(out_ouster_channel);
 	std::uint32_t& ouster_channel = *out_ouster_channel;
 
-	static constexpr auto const s_record_callback = [](void* const ctx, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, [[maybe_unused]] bool& keep_iterating) -> bool
 	{
 		std::optional<std::uint32_t>& ouster_channel_opt = *static_cast<std::optional<std::uint32_t>*>(ctx);
 		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
@@ -190,7 +190,7 @@ bool mk::bag_tool::detail::process_ouster_records(data_source_t& data_source, st
 		std::vector<unsigned char> m_helper_buffer;
 	};
 
-	static constexpr auto const s_record_callback = [](void* const ctx, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, [[maybe_unused]] bool& keep_iterating) -> bool
 	{
 		helper_struct_t& helper = *static_cast<helper_struct_t*>(ctx);
 		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
@@ -223,7 +223,7 @@ bool mk::bag_tool::detail::process_record_ouster_chunk(mk::bag::record_t const& 
 	bool const decompressed = decompress_record_chunk_data(record, helper_buffer, &decompressed_data);
 	CHECK_RET_F(decompressed);
 
-	static constexpr auto const s_record_callback = [](void* const ctx, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data, [[maybe_unused]] bool& keep_iterating) -> bool
 	{
 		std::uint32_t const& ouster_channel = *static_cast<std::uint32_t const*>(ctx);
 		mk::bag::record_t const& record = *static_cast<mk::bag::record_t const*>(data);
