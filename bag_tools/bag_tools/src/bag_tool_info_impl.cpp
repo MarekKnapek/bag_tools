@@ -52,10 +52,9 @@ bool mk::bag_tool::detail::bag_info(data_source_t& data_source)
 	CHECK_RET_F(mk::bag::is_bag_file(data_source));
 	data_source.consume(mk::bag::bag_file_header_len());
 
-	static constexpr auto const s_record_callback = [](void* const ctx, [[maybe_unused]] mk::bag::callback_variant_e const variant, void* const data) -> bool
+	static constexpr auto const s_record_callback = [](void* const ctx, void* const data) -> bool
 	{
 		assert(ctx);
-		assert(variant == mk::bag::callback_variant_e::record);
 		assert(data);
 
 		bag_info_t& bag_info = *static_cast<bag_info_t*>(ctx);

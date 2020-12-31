@@ -453,10 +453,9 @@ bool mk::bag::detail::parse_record(data_source_t& data_source, record_t* const o
 		fields_t& m_fields;
 		int& m_fields_count;
 	};
-	static constexpr auto const s_field_callback = [](void* const ctx, callback_variant_e const variant, void* const data) -> bool
+	static constexpr auto const s_field_callback = [](void* const ctx, void* const data) -> bool
 	{
 		fields_callback_ctx_t& fields_callback_ctx = *static_cast<fields_callback_ctx_t*>(ctx);
-		CHECK_RET_F(variant == callback_variant_e::field);
 		field_t& field = *static_cast<field_t*>(data);
 
 		CHECK_RET_F(fields_callback_ctx.m_fields_count < s_fields_max);
@@ -565,7 +564,7 @@ bool mk::bag::parse_records(data_source_t& data_source, callback_t const callbac
 		record_t record;
 		bool const record_parsed = detail::parse_record(data_source, &record);
 		CHECK_RET_F(record_parsed);
-		bool const called_back = callback(callback_ctx, callback_variant_e::record, &record);
+		bool const called_back = callback(callback_ctx, &record);
 		CHECK_RET_F(called_back);
 	}
 	return true;
@@ -581,7 +580,7 @@ bool mk::bag::parse_fields(data_source_t& data_source, callback_t const callback
 		field_t field;
 		bool const field_parsed = detail::parse_field(data_source, &field);
 		CHECK_RET_F(field_parsed);
-		bool const called_back = callback(callback_ctx, callback_variant_e::field, &field);
+		bool const called_back = callback(callback_ctx, &field);
 		CHECK_RET_F(called_back);
 	}
 

@@ -134,13 +134,7 @@ namespace mk
 		};
 
 
-		enum class callback_variant_e
-		{
-			record,
-			field,
-		};
-
-		typedef bool(*callback_t)(void* const ctx, callback_variant_e const variant, void* const data);
+		typedef bool(*callback_t)(void* const ctx, void* const data);
 
 
 		int bag_file_header_len();
