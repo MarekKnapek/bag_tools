@@ -40,6 +40,8 @@
     </ClCompile>
     <ClCompile Include="src\bag_tool_info.cpp" />
     <ClCompile Include="src\bag_tool_info_impl.cpp" />
+    <ClCompile Include="src\bag_tool_validate.cpp" />
+    <ClCompile Include="src\bag_tool_validate_impl.cpp" />
     <ClCompile Include="src\data_source_mem.cpp" />
     <ClCompile Include="src\data_source_rommf.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -59,6 +61,8 @@
     <ClInclude Include="src\bag_to_pcap_impl.h" />
     <ClInclude Include="src\bag_tool_info.h" />
     <ClInclude Include="src\bag_tool_info_impl.h" />
+    <ClInclude Include="src\bag_tool_validate.h" />
+    <ClInclude Include="src\bag_tool_validate_impl.h" />
     <ClInclude Include="src\cross_platform.h" />
     <ClInclude Include="src\data_source_mem.h" />
     <ClInclude Include="src\data_source_rommf.h" />
@@ -155,9 +159,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <OmitFramePointers>false</OmitFramePointers>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
       <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>

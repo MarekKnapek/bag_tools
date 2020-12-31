@@ -1,5 +1,6 @@
 #include "bag_to_pcap.h"
 #include "bag_tool_info.h"
+#include "bag_tool_validate.h"
 #include "cross_platform.h"
 #include "scope_exit.h"
 #include "utils.h"
@@ -14,6 +15,8 @@ static constexpr native_char_t const s_tool_info_name[] = MK_TEXT("/info");
 static constexpr int const s_tool_info_name_len = static_cast<int>(std::size(s_tool_info_name)) - 1;
 static constexpr native_char_t const s_tool_pcap_name[] = MK_TEXT("/pcap");
 static constexpr int const s_tool_pcap_name_len = static_cast<int>(std::size(s_tool_pcap_name)) - 1;
+static constexpr native_char_t const s_tool_validate_name[] = MK_TEXT("/validate");
+static constexpr int const s_tool_validate_name_len = static_cast<int>(std::size(s_tool_validate_name)) - 1;
 
 
 bool do_bussiness(int const argc, native_char_t const* const* const argv);
@@ -64,6 +67,11 @@ bool do_bussiness(int const argc, native_char_t const* const* const argv)
 	else if(command_len == s_tool_pcap_name_len && std::memcmp(command, s_tool_pcap_name, s_tool_pcap_name_len * sizeof(native_char_t)) == 0)
 	{
 		bool const command_ret = mk::bag_tool::bag_to_pcap(argc, argv);
+		CHECK_RET_F(command_ret);
+	}
+	else if(command_len == s_tool_validate_name_len && std::memcmp(command, s_tool_validate_name, s_tool_validate_name_len * sizeof(native_char_t)) == 0)
+	{
+		bool const command_ret = mk::bag_tool::bag_validate(argc, argv);
 		CHECK_RET_F(command_ret);
 	}
 	else

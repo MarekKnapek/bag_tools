@@ -35,6 +35,12 @@
     <ClCompile Include="src\bag_tool_info_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\bag_tool_validate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bag_tool_validate_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\data_source_mem.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -71,6 +77,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\bag_tool_info_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bag_tool_validate.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bag_tool_validate_impl.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\cross_platform.h">
